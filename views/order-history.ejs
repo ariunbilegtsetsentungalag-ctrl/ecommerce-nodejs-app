@@ -1,0 +1,47 @@
+<%- include('include/header') %>
+<div class="container py-4">
+  <h2>Order History</h2>
+  <% if (!orders || orders.length === 0) { %>
+    <div class="alert alert-info">You haven't placed any orders yet. <a href="/shop">Shop now</a></div>
+  <% } else { %>
+    <div class="row">
+      <% orders.forEach(order => { %>
+        <div class="col-12 mb-4">
+          <div class="card">
+            <div class="card-header">
+              <div class="d-flex justify-content-between align-items-center">
+                <span>Order Date: <%= new Date(order.orderDate).toLocaleString() %></span>
+                <span>Total: $<%= order.totalAmount.toFixed(2) %></span>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table">
+                  <thead>
+                    <tr>
+                      <th>Product</th>
+                      <th>Quantity</th>
+                      <th>Price</th>
+                      <th>Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <% order.products.forEach(item => { %>
+                      <tr>
+                        <td><%= item.name %></td>
+                        <td><%= item.quantity %></td>
+                        <td>$<%= item.price.toFixed(2) %></td>
+                        <td>$<%= (item.price * item.quantity).toFixed(2) %></td>
+                      </tr>
+                    <% }) %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</div>
+<%- include('include/footer') %>

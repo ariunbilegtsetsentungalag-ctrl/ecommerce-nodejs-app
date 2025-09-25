@@ -1,0 +1,24 @@
+<%- include('include/header') %>
+<div class="container py-4">
+  <h2>Shop</h2>
+  <div class="row">
+    <% products.forEach(p => { %>
+      <div class="col-md-3">
+        <div class="card mb-3">
+          <img src="/images/<%= p.image %>" class="card-img-top">
+          <div class="card-body">
+            <h5><%= p.name %></h5>
+            <p><%= p.description %></p>
+            <p><strong>$<%= p.price %></strong></p>
+            <form action="/cart/add" method="POST">
+              <input type="hidden" name="productId" value="<%= p.id %>">
+              <button class="btn btn-success">Add to bag</button>
+            </form>
+            <a href="/product/<%= p.id %>" class="btn btn-link">Details</a>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+</div>
+<%- include('include/footer') %>

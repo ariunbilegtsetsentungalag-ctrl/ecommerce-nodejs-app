@@ -1,0 +1,3 @@
+body { padding-top: 70px; }
+.card-img-top { height: 180px; object-fit: cover; }
+.img-fluid { max-height: 220px; object-fit: cover; }

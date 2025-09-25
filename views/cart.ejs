@@ -1,0 +1,37 @@
+<%- include('include/header') %>
+<div class="container py-4">
+  <h2>My Bag</h2>
+  <% if (cart.items.length === 0) { %>
+    <div class="alert alert-info">Your bag is empty. <a href="/shop">Shop now</a></div>
+  <% } else { %>
+    <div class="row">
+      <div class="col-md-8">
+        <% let total = 0 %>
+        <% cart.items.forEach(it => { %>
+          <div class="card mb-2">
+            <div class="row g-0">
+              <div class="col-md-4"><img src="/images/<%= it.product.image %>" class="img-fluid"></div>
+              <div class="col-md-8 p-2">
+                <h5><%= it.product.name %></h5>
+                <p>Qty: <%= it.quantity %></p>
+                <p>Price: $<%= it.product.price %></p>
+                <a href="/cart/remove/<%= it.product.id %>" class="btn btn-danger btn-sm">Remove</a>
+              </div>
+            </div>
+          </div>
+          <% total += it.product.price * it.quantity %>
+        <% }) %>
+      </div>
+      <div class="col-md-4">
+        <div class="card p-3">
+          <h5>Order Summary</h5>
+          <p>Total: $<%= total.toFixed(2) %></p>
+          <form method="POST" action="/cart/checkout">
+            <button type="submit" class="btn btn-primary w-100">Checkout</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  <% } %>
+</div>
+<%- include('include/footer') %>
