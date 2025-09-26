@@ -82,8 +82,6 @@ const staticProducts = [
   }
 ]
 
-const Product = require('../models/Product');
-
 exports.home = async (req, res) => {
   try {
     const products = await Product.find({ inStock: true }).limit(8);

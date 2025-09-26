@@ -298,16 +298,36 @@
                     </div>
                     <% } %>
 
+                    <!-- Stock Information -->
+                    <div class="option-section">
+                        <label class="option-label">Availability:</label>
+                        <% if (product.inStock && product.stockQuantity > 0) { %>
+                            <% if (product.stockQuantity <= 5) { %>
+                                <p style="color: #ff6b35; font-weight: bold;">⚠️ Only <%= product.stockQuantity %> left in stock!</p>
+                            <% } else if (product.stockQuantity <= 10) { %>
+                                <p style="color: #ffa500; font-weight: bold;">🟡 <%= product.stockQuantity %> in stock</p>
+                            <% } else { %>
+                                <p style="color: #28a745; font-weight: bold;">✅ <%= product.stockQuantity %> in stock</p>
+                            <% } %>
+                        <% } else { %>
+                            <p style="color: #dc3545; font-weight: bold;">❌ Out of Stock</p>
+                        <% } %>
+                    </div>
+
+                    <% if (product.inStock && product.stockQuantity > 0) { %>
                     <div class="quantity-section">
                         <label class="option-label">Quantity:</label>
                         <div class="quantity-controls">
                             <button type="button" class="qty-btn" onclick="changeQuantity(-1)">-</button>
-                            <input type="number" name="quantity" id="quantity" value="1" min="1" class="qty-input" readonly>
+                            <input type="number" name="quantity" id="quantity" value="1" min="1" max="<%= product.stockQuantity %>" class="qty-input" readonly>
                             <button type="button" class="qty-btn" onclick="changeQuantity(1)">+</button>
                         </div>
                     </div>
 
                     <button type="submit" class="add-to-cart-btn">Add to Cart</button>
+                    <% } else { %>
+                    <button type="button" class="add-to-cart-btn" disabled style="background: #ccc; cursor: not-allowed;">Out of Stock</button>
+                    <% } %>
                 </form>
             </div>
         </div>
@@ -349,8 +369,12 @@
 
         function changeQuantity(delta) {
             const quantityInput = document.getElementById('quantity');
+            const maxStock = parseInt(quantityInput.getAttribute('max'));
             let newQuantity = parseInt(quantityInput.value) + delta;
+            
             if (newQuantity < 1) newQuantity = 1;
+            if (newQuantity > maxStock) newQuantity = maxStock;
+            
             quantityInput.value = newQuantity;
         }
     </script>

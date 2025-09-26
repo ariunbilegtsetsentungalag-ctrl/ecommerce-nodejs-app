@@ -120,12 +120,21 @@
               <h5 class="product-name"><%= p.name %></h5>
               <p class="product-description"><%= p.description %></p>
               <p class="product-price">$<%= p.basePrice ? p.basePrice.toFixed(2) : p.price.toFixed(2) %></p>
+              <% if (p.stockQuantity <= 5 && p.stockQuantity > 0) { %>
+                <p class="text-warning small"><strong>Only <%= p.stockQuantity %> left in stock!</strong></p>
+              <% } else if (p.stockQuantity > 5) { %>
+                <p class="text-success small"><%= p.stockQuantity %> in stock</p>
+              <% } %>
             </div>
             <div class="product-actions">
-              <form action="/cart/add" method="POST" style="flex: 1;">
-                <input type="hidden" name="productId" value="<%= p._id %>">
-                <button type="submit" class="btn-add-cart">Add to Cart</button>
-              </form>
+              <% if (p.inStock && p.stockQuantity > 0) { %>
+                <form action="/cart/add" method="POST" style="flex: 1;">
+                  <input type="hidden" name="productId" value="<%= p._id %>">
+                  <button type="submit" class="btn-add-cart">Add to Cart</button>
+                </form>
+              <% } else { %>
+                <button class="btn-add-cart" disabled style="background: #ccc;">Out of Stock</button>
+              <% } %>
               <a href="/product/<%= p._id %>" class="btn-details">Details</a>
             </div>
           </div>

@@ -20,6 +20,34 @@ exports.addToCart = async (req, res) => {
       return res.redirect('/shop')
     }
 
+    // Check if product is in stock
+    if (!product.inStock) {
+      req.flash('error', 'This product is currently out of stock')
+      return res.redirect('/shop')
+    }
+
+    // Check available quantity
+    if (product.stockQuantity < quantity) {
+      req.flash('error', `Only ${product.stockQuantity} items available in stock`)
+      return res.redirect(`/product/${productId}`)
+    }
+
+    // Check total quantity in cart + new quantity
+    req.session.cart = req.session.cart || { items: [] }
+    const existingCartItem = req.session.cart.items.find(item => 
+      item.product._id.toString() === product._id.toString() && 
+      item.options.size === selectedSize && 
+      item.options.color === selectedColor
+    )
+    
+    const currentCartQuantity = existingCartItem ? existingCartItem.quantity : 0
+    const totalRequestedQuantity = currentCartQuantity + quantity
+    
+    if (product.stockQuantity < totalRequestedQuantity) {
+      req.flash('error', `Cannot add ${quantity} more items. Only ${product.stockQuantity - currentCartQuantity} items available (${currentCartQuantity} already in cart)`)
+      return res.redirect(`/product/${productId}`)
+    }
+
     // Calculate price based on selected size
     let itemPrice = product.basePrice
     if (selectedSize && product.sizes && product.sizes.length > 0) {
@@ -84,9 +112,24 @@ exports.checkout = async (req, res) => {
       return res.redirect('/cart')
     }
 
+    // Validate stock availability before processing order
+    const Product = require('../models/Product')
+    for (const item of cart.items) {
+      const product = await Product.findById(item.product._id)
+      if (!product) {
+        req.flash('error', `Product ${item.product.name} no longer exists`)
+        return res.redirect('/cart')
+      }
+      if (!product.inStock || product.stockQuantity < item.quantity) {
+        req.flash('error', `${item.product.name} is out of stock or insufficient quantity available`)
+        return res.redirect('/cart')
+      }
+    }
+
     const totalAmount = cart.items.reduce((total, item) => 
       total + (item.product.price * item.quantity), 0)
 
+    // Create the order
     const order = new Order({
       user: req.session.userId,
       products: cart.items.map(item => ({
@@ -99,6 +142,31 @@ exports.checkout = async (req, res) => {
     })
 
     await order.save()
+
+    // Reduce stock quantities for each purchased item
+    for (const item of cart.items) {
+      const newStockQuantity = await Product.findByIdAndUpdate(
+        item.product._id,
+        { 
+          $inc: { stockQuantity: -item.quantity },
+        },
+        { new: true }
+      )
+
+      // If stock reaches 0, mark as out of stock
+      if (newStockQuantity.stockQuantity <= 0) {
+        await Product.findByIdAndUpdate(
+          item.product._id,
+          { 
+            stockQuantity: 0,
+            inStock: false 
+          }
+        )
+        console.log(`⚠️ Product "${item.product.name}" is now out of stock`)
+      } else {
+        console.log(`📦 Updated stock for "${item.product.name}": ${newStockQuantity.stockQuantity} remaining`)
+      }
+    }
 
     req.session.cart = { items: [] }
     req.flash('success', 'Order placed successfully!')
