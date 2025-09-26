@@ -12,7 +12,7 @@ exports.postSignup = async (req, res) => {
   try {
     const { username, email, password } = req.body;
     
-    // Check if user already exists
+    
     const existingUser = await User.findOne({ 
       $or: [{ email }, { username }] 
     });
@@ -21,8 +21,6 @@ exports.postSignup = async (req, res) => {
       req.flash('error', 'User already exists');
       return res.redirect('/signup');
     }
-
-    // Create new user
     const user = new User({
       username,
       email,
@@ -60,10 +58,13 @@ exports.postLogin = async (req, res) => {
       });
     }
 
-    // Set user session
     req.session.userId = user._id;
     req.session.username = user.username;
-    req.session.user = { username: user.username };
+    req.session.user = { 
+      username: user.username,
+      role: user.role,
+      permissions: user.permissions
+    };
     
     req.flash('success', 'Successfully logged in!');
     req.session.save(() => {

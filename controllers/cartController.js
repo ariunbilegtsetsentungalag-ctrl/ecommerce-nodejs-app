@@ -7,6 +7,9 @@ exports.viewCart = (req, res) => {
 
 exports.addToCart = (req, res) => {
   const productId = req.body.productId
+  const quantity = parseInt(req.body.quantity) || 1
+  const selectedSize = req.body.selectedSize
+  const selectedColor = req.body.selectedColor
 
   const productController = require('./productController')
   const product = productController._products.find(p => p.id === productId)
@@ -14,11 +17,45 @@ exports.addToCart = (req, res) => {
     req.flash('error', 'Product not found')
     return res.redirect('/shop')
   }
+
+
+  let itemPrice = product.basePrice || product.price
+  if (selectedSize && product.sizes) {
+    const sizeOption = product.sizes.find(s => s.name === selectedSize)
+    if (sizeOption) {
+      itemPrice = sizeOption.price
+    }
+  }
+
+
+  const cartItem = {
+    product: {
+      ...product,
+      price: itemPrice
+    },
+    quantity,
+    options: {
+      size: selectedSize,
+      color: selectedColor
+    }
+  }
+
   req.session.cart = req.session.cart || { items: [] }
-  const existing = req.session.cart.items.find(i => i.product.id === product.id)
-  if (existing) existing.quantity += 1
-  else req.session.cart.items.push({ product, quantity: 1 })
-  req.flash('success', 'Added to cart')
+  
+
+  const existing = req.session.cart.items.find(item => 
+    item.product.id === product.id && 
+    item.options.size === selectedSize && 
+    item.options.color === selectedColor
+  )
+  
+  if (existing) {
+    existing.quantity += quantity
+  } else {
+    req.session.cart.items.push(cartItem)
+  }
+  
+  req.flash('success', `Added ${product.name} to cart`)
   res.redirect('/shop')
 }
 

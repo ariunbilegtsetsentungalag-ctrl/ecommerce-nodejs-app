@@ -1,18 +1,363 @@
-<%- include('include/header') %>
-<div class="container py-4">
-  <div class="row">
-    <div class="col-md-6">
-      <img src="/images/<%= product.image %>" class="img-fluid">
-    </div>
-    <div class="col-md-6">
-      <h2><%= product.name %></h2>
-      <p><%= product.description %></p>
-      <p><strong>$<%= product.price %></strong></p>
-      <form action="/cart/add" method="POST">
-        <input type="hidden" name="productId" value="<%= product.id %>">
-        <button class="btn btn-success">Add to bag</button>
-      </form>
-    </div>
-  </div>
-</div>
-<%- include('include/footer') %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= product.name %> - MyApp</title>
+    <link rel="stylesheet" href="/main.css">
+    <style>
+        .product-detail-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .product-images {
+            position: relative;
+        }
+
+        .main-image {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 2px solid #f0f0f0;
+        }
+
+        .image-thumbnails {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .thumbnail {
+            width: 60px;
+            height: 60px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .thumbnail:hover,
+        .thumbnail.active {
+            border-color: #007bff;
+            transform: scale(1.05);
+        }
+
+        .product-info h1 {
+            font-size: 28px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .price-display {
+            font-size: 24px;
+            font-weight: bold;
+            color: #e74c3c;
+            margin-bottom: 20px;
+        }
+
+        .product-description {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .option-section {
+            margin-bottom: 25px;
+        }
+
+        .option-label {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .size-options, .color-options {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .size-btn {
+            padding: 10px 16px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .size-btn:hover,
+        .size-btn.selected {
+            border-color: #007bff;
+            background: #007bff;
+            color: white;
+        }
+
+        .color-option {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .color-option:hover,
+        .color-option.selected {
+            border-color: #333;
+            transform: scale(1.1);
+        }
+
+        .features-list {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 25px;
+        }
+
+        .features-list li {
+            padding: 5px 0;
+            color: #666;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .features-list li:before {
+            content: "✓";
+            color: #28a745;
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        .quantity-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .quantity-controls {
+            display: flex;
+            align-items: center;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+        }
+
+        .qty-btn {
+            background: #f8f9fa;
+            border: none;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            font-size: 18px;
+            color: #666;
+        }
+
+        .qty-btn:hover {
+            background: #e9ecef;
+        }
+
+        .qty-input {
+            width: 60px;
+            text-align: center;
+            border: none;
+            height: 36px;
+            font-size: 16px;
+        }
+
+        .add-to-cart-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.3s ease;
+        }
+
+        .add-to-cart-btn:hover {
+            background: #218838;
+        }
+
+        .add-to-cart-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #007bff;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .product-detail-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                margin: 20px;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <%- include('include/header') %>
+
+    <main class="container">
+        <a href="/shop" class="back-link">← Back to Shop</a>
+        
+        <div class="product-detail-container">
+            <div class="product-images">
+                <img src="/images/<%= product.image %>" alt="<%= product.name %>" class="main-image" id="mainImage">
+                
+                <% if (product.images && product.images.length > 1) { %>
+                <div class="image-thumbnails">
+                    <% product.images.forEach((img, index) => { %>
+                    <img src="/images/<%= img %>" alt="<%= product.name %>" 
+                         class="thumbnail <%= index === 0 ? 'active' : '' %>" 
+                         onclick="changeMainImage('/images/<%= img %>', this)">
+                    <% }); %>
+                </div>
+                <% } %>
+            </div>
+
+            <div class="product-info">
+                <h1><%= product.name %></h1>
+                <div class="price-display" id="priceDisplay">
+                    $<%= product.basePrice ? product.basePrice.toFixed(2) : product.price.toFixed(2) %>
+                </div>
+                <p class="product-description"><%= product.description %></p>
+
+                <form action="/cart/add" method="POST" id="productForm">
+                    <input type="hidden" name="productId" value="<%= product.id %>">
+                    
+                    <% if (product.sizes && product.sizes.length > 0) { %>
+                    <div class="option-section">
+                        <label class="option-label">Size:</label>
+                        <div class="size-options">
+                            <% product.sizes.forEach((size, index) => { %>
+                            <button type="button" class="size-btn <%= index === 0 ? 'selected' : '' %>" 
+                                    data-size="<%= size.name %>" 
+                                    data-price="<%= size.price %>"
+                                    onclick="selectSize('<%= size.name %>', <%= size.price %>)">
+                                <%= size.name %>
+                            </button>
+                            <% }); %>
+                        </div>
+                        <input type="hidden" name="selectedSize" id="selectedSize" value="<%= product.sizes[0].name %>">
+                    </div>
+                    <% } %>
+
+                    <% if (product.colors && product.colors.length > 0) { %>
+                    <div class="option-section">
+                        <label class="option-label">Color:</label>
+                        <div class="color-options">
+                            <% product.colors.forEach((color, index) => { %>
+                            <div class="color-option <%= index === 0 ? 'selected' : '' %>" 
+                                 style="background-color: <%= color.code %>" 
+                                 title="<%= color.name %>"
+                                 data-color="<%= color.name %>"
+                                 data-image="<%= color.image %>"
+                                 onclick="selectColor('<%= color.name %>', '<%= color.image %>')"></div>
+                            <% }); %>
+                        </div>
+                        <input type="hidden" name="selectedColor" id="selectedColor" value="<%= product.colors[0].name %>">
+                    </div>
+                    <% } %>
+
+                    <% if (product.features && product.features.length > 0) { %>
+                    <div class="option-section">
+                        <label class="option-label">Features:</label>
+                        <ul class="features-list">
+                            <% product.features.forEach(feature => { %>
+                            <li><%= feature %></li>
+                            <% }); %>
+                        </ul>
+                    </div>
+                    <% } %>
+
+                    <div class="quantity-section">
+                        <label class="option-label">Quantity:</label>
+                        <div class="quantity-controls">
+                            <button type="button" class="qty-btn" onclick="changeQuantity(-1)">-</button>
+                            <input type="number" name="quantity" id="quantity" value="1" min="1" class="qty-input" readonly>
+                            <button type="button" class="qty-btn" onclick="changeQuantity(1)">+</button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="add-to-cart-btn">Add to Cart</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let currentPrice = <%= product.basePrice ? product.basePrice : product.price %>;
+
+        function changeMainImage(src, thumbnail) {
+            document.getElementById('mainImage').src = src;
+            
+
+            document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+            thumbnail.classList.add('active');
+        }
+
+        function selectSize(sizeName, price) {
+            document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+            
+
+            document.getElementById('selectedSize').value = sizeName;
+            
+ 
+            currentPrice = price;
+            document.getElementById('priceDisplay').textContent = '$' + price.toFixed(2);
+        }
+
+        function selectColor(colorName, imageSrc) {
+            // Update selected color
+            document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
+            event.target.classList.add('selected');
+            
+            // Update hidden input
+            document.getElementById('selectedColor').value = colorName;
+            
+            // Update main image if color has specific image
+            if (imageSrc && imageSrc !== '<%= product.image %>') {
+                document.getElementById('mainImage').src = '/images/' + imageSrc;
+            }
+        }
+
+        function changeQuantity(delta) {
+            const quantityInput = document.getElementById('quantity');
+            let newQuantity = parseInt(quantityInput.value) + delta;
+            if (newQuantity < 1) newQuantity = 1;
+            quantityInput.value = newQuantity;
+        }
+    </script>
+
+    <%- include('include/footer') %>
+</body>
+</html>

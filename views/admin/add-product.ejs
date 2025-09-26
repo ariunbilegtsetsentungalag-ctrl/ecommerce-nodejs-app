@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %> - MyApp Admin</title>
+    <link rel="stylesheet" href="/main.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .admin-sidebar {
+            background: #2c3e50;
+            color: white;
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+        .admin-sidebar a {
+            color: #ecf0f1;
+            text-decoration: none;
+            padding: 12px 20px;
+            display: block;
+            border-radius: 5px;
+            margin: 5px 15px;
+            transition: all 0.3s ease;
+        }
+        .admin-sidebar a:hover,
+        .admin-sidebar a.active {
+            background: #3498db;
+            color: white;
+        }
+        .admin-header {
+            background: #34495e;
+            color: white;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+        }
+        .form-section {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+        .dropzone {
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .dropzone:hover {
+            border-color: #3498db;
+            background: #f8f9fa;
+        }
+        .dropzone.dragover {
+            border-color: #e74c3c;
+            background: #fff5f5;
+        }
+        .preview-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .preview-item {
+            position: relative;
+            width: 100px;
+            height: 100px;
+        }
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 5px;
+            border: 2px solid #ddd;
+        }
+        .preview-item .remove-btn {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            cursor: pointer;
+        }
+        .size-color-section {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .dynamic-input {
+            margin-bottom: 10px;
+        }
+        .btn-remove {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 admin-sidebar">
+                <h4 class="text-center mb-4">
+                    <i class="fas fa-tools"></i> Admin Panel
+                </h4>
+                <a href="/admin">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a href="/admin/products">
+                    <i class="fas fa-box"></i> Manage Products
+                </a>
+                <a href="/admin/add-product" class="active">
+                    <i class="fas fa-plus"></i> Add Product
+                </a>
+                <a href="/admin/users">
+                    <i class="fas fa-users"></i> Manage Users
+                </a>
+                <hr style="border-color: #3498db;">
+                <a href="/shop">
+                    <i class="fas fa-store"></i> View Shop
+                </a>
+                <a href="/logout">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-10">
+                <div class="admin-header">
+                    <h2><%= title %></h2>
+                    <small>Create a new product for your shop</small>
+                </div>
+
+                <!-- Flash Messages -->
+                <% if (typeof messages !== 'undefined') { %>
+                    <% if (messages.success) { %>
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <%= messages.success %>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    <% } %>
+                    <% if (messages.error) { %>
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <%= messages.error %>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    <% } %>
+                <% } %>
+
+                <!-- Add Product Form -->
+                <form action="/admin/products" method="POST" enctype="multipart/form-data">
+                    <!-- Basic Information -->
+                    <div class="form-section">
+                        <h4 class="mb-3">
+                            <i class="fas fa-info-circle"></i> Basic Information
+                        </h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">Product Name *</label>
+                                    <input type="text" class="form-control" id="name" name="name" required>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="basePrice" class="form-label">Base Price *</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" step="0.01" class="form-control" id="basePrice" name="basePrice" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="stockQuantity" class="form-label">Stock Quantity</label>
+                                    <input type="number" class="form-control" id="stockQuantity" name="stockQuantity" value="0">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="category" class="form-label">Category *</label>
+                                    <select class="form-control" id="category" name="category" required>
+                                        <option value="">Select Category</option>
+                                        <option value="Clothing">Clothing</option>
+                                        <option value="Shoes">Shoes</option>
+                                        <option value="Accessories">Accessories</option>
+                                        <option value="Home & Living">Home & Living</option>
+                                        <option value="Electronics">Electronics</option>
+                                        <option value="Sports">Sports</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="description" class="form-label">Description *</label>
+                                    <textarea class="form-control" id="description" name="description" rows="3" required></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Images -->
+                    <div class="form-section">
+                        <h4 class="mb-3">
+                            <i class="fas fa-images"></i> Product Images
+                        </h4>
+                        <div class="dropzone" id="imageDropzone">
+                            <i class="fas fa-cloud-upload-alt fa-3x text-muted mb-3"></i>
+                            <h5>Drop images here or click to browse</h5>
+                            <p class="text-muted">Supports: JPG, PNG, GIF (Max: 5MB each)</p>
+                            <input type="file" id="imageInput" name="images" multiple accept="image/*" style="display: none;">
+                        </div>
+                        <div id="previewContainer" class="preview-container"></div>
+                    </div>
+
+                    <!-- Sizes -->
+                    <div class="form-section">
+                        <h4 class="mb-3">
+                            <i class="fas fa-ruler"></i> Size Options
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addSize()">
+                                <i class="fas fa-plus"></i> Add Size
+                            </button>
+                        </h4>
+                        <div id="sizesContainer">
+                            <!-- Dynamic size inputs will be added here -->
+                        </div>
+                        <input type="hidden" id="sizesData" name="sizes" value="[]">
+                    </div>
+
+                    <!-- Colors -->
+                    <div class="form-section">
+                        <h4 class="mb-3">
+                            <i class="fas fa-palette"></i> Color Options
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addColor()">
+                                <i class="fas fa-plus"></i> Add Color
+                            </button>
+                        </h4>
+                        <div id="colorsContainer">
+                            <!-- Dynamic color inputs will be added here -->
+                        </div>
+                        <input type="hidden" id="colorsData" name="colors" value="[]">
+                    </div>
+
+                    <!-- Features -->
+                    <div class="form-section">
+                        <h4 class="mb-3">
+                            <i class="fas fa-list"></i> Product Features
+                        </h4>
+                        <textarea class="form-control" name="features" rows="4" 
+                                  placeholder="Enter each feature on a new line&#10;Example:&#10;High-quality fabric&#10;Machine washable&#10;Fade-resistant colors"></textarea>
+                    </div>
+
+                    <!-- Submit Buttons -->
+                    <div class="form-section text-center">
+                        <button type="submit" class="btn btn-success btn-lg me-3">
+                            <i class="fas fa-plus"></i> Create Product
+                        </button>
+                        <a href="/admin/products" class="btn btn-secondary btn-lg">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // File upload handling
+        const imageInput = document.getElementById('imageInput');
+        const dropzone = document.getElementById('imageDropzone');
+        const previewContainer = document.getElementById('previewContainer');
+        let selectedFiles = [];
+
+        dropzone.addEventListener('click', () => imageInput.click());
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('dragover');
+        });
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('dragover');
+        });
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('dragover');
+            handleFiles(e.dataTransfer.files);
+        });
+        imageInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            Array.from(files).forEach(file => {
+                if (file.type.startsWith('image/') && file.size <= 5 * 1024 * 1024) {
+                    selectedFiles.push(file);
+                    addPreview(file);
+                }
+            });
+            updateFileInput();
+        }
+
+        function addPreview(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const div = document.createElement('div');
+                div.className = 'preview-item';
+                div.innerHTML = `
+                    <img src="${e.target.result}" alt="Preview">
+                    <button type="button" class="remove-btn" onclick="removePreview(this, '${file.name}')">×</button>
+                `;
+                previewContainer.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function removePreview(button, fileName) {
+            selectedFiles = selectedFiles.filter(file => file.name !== fileName);
+            button.parentElement.remove();
+            updateFileInput();
+        }
+
+        function updateFileInput() {
+            const dt = new DataTransfer();
+            selectedFiles.forEach(file => dt.items.add(file));
+            imageInput.files = dt.files;
+        }
+
+        // Size management
+        let sizeCount = 0;
+        function addSize() {
+            const div = document.createElement('div');
+            div.className = 'size-color-section dynamic-input';
+            div.innerHTML = `
+                <div class="row">
+                    <div class="col-md-6">
+                        <input type="text" class="form-control size-name" placeholder="Size name (e.g., M, Large, 42)" onchange="updateSizes()">
+                    </div>
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text">$</span>
+                            <input type="number" step="0.01" class="form-control size-price" placeholder="Price" onchange="updateSizes()">
+                        </div>
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-remove" onclick="removeSize(this)">Remove</button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('sizesContainer').appendChild(div);
+            sizeCount++;
+        }
+
+        function removeSize(button) {
+            button.closest('.dynamic-input').remove();
+            updateSizes();
+        }
+
+        function updateSizes() {
+            const sizes = [];
+            document.querySelectorAll('.size-color-section').forEach(section => {
+                const name = section.querySelector('.size-name')?.value;
+                const price = section.querySelector('.size-price')?.value;
+                if (name && price) {
+                    sizes.push({ name, price: parseFloat(price) });
+                }
+            });
+            document.getElementById('sizesData').value = JSON.stringify(sizes);
+        }
+
+        // Color management
+        let colorCount = 0;
+        function addColor() {
+            const div = document.createElement('div');
+            div.className = 'size-color-section dynamic-input';
+            div.innerHTML = `
+                <div class="row">
+                    <div class="col-md-4">
+                        <input type="text" class="form-control color-name" placeholder="Color name (e.g., Blue, Red)" onchange="updateColors()">
+                    </div>
+                    <div class="col-md-4">
+                        <input type="color" class="form-control color-code" onchange="updateColors()">
+                    </div>
+                    <div class="col-md-2">
+                        <input type="text" class="form-control color-image" placeholder="Image filename" onchange="updateColors()">
+                    </div>
+                    <div class="col-md-2">
+                        <button type="button" class="btn btn-remove" onclick="removeColor(this)">Remove</button>
+                    </div>
+                </div>
+            `;
+            document.getElementById('colorsContainer').appendChild(div);
+            colorCount++;
+        }
+
+        function removeColor(button) {
+            button.closest('.dynamic-input').remove();
+            updateColors();
+        }
+
+        function updateColors() {
+            const colors = [];
+            document.querySelectorAll('#colorsContainer .size-color-section').forEach(section => {
+                const name = section.querySelector('.color-name')?.value;
+                const code = section.querySelector('.color-code')?.value;
+                const image = section.querySelector('.color-image')?.value;
+                if (name && code) {
+                    colors.push({ name, code, image: image || '' });
+                }
+            });
+            document.getElementById('colorsData').value = JSON.stringify(colors);
+        }
+    </script>
+</body>
+</html>

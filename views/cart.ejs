@@ -13,8 +13,18 @@
               <div class="col-md-4"><img src="/images/<%= it.product.image %>" class="img-fluid"></div>
               <div class="col-md-8 p-2">
                 <h5><%= it.product.name %></h5>
+                <% if (it.options && (it.options.size || it.options.color)) { %>
+                <div class="text-muted mb-2">
+                  <% if (it.options.size) { %>
+                    <small>Size: <strong><%= it.options.size %></strong></small><br>
+                  <% } %>
+                  <% if (it.options.color) { %>
+                    <small>Color: <strong><%= it.options.color %></strong></small>
+                  <% } %>
+                </div>
+                <% } %>
                 <p>Qty: <%= it.quantity %></p>
-                <p>Price: $<%= it.product.price %></p>
+                <p>Price: $<%= (it.product.price * it.quantity).toFixed(2) %></p>
                 <a href="/cart/remove/<%= it.product.id %>" class="btn btn-danger btn-sm">Remove</a>
               </div>
             </div>

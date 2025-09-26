@@ -1,0 +1,314 @@
+const Product = require('../models/Product');
+const User = require('../models/User');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
+
+// Configure multer for file uploads
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    const uploadDir = path.join(__dirname, '../public/images');
+    if (!fs.existsSync(uploadDir)) {
+      fs.mkdirSync(uploadDir, { recursive: true });
+    }
+    cb(null, uploadDir);
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'product-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const fileFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith('image/')) {
+    cb(null, true);
+  } else {
+    cb(new Error('Only image files are allowed!'), false);
+  }
+};
+
+const upload = multer({ 
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+});
+
+// Admin Dashboard
+exports.dashboard = async (req, res) => {
+  try {
+    const totalProducts = await Product.countDocuments();
+    const totalUsers = await User.countDocuments({ role: 'customer' });
+    const recentProducts = await Product.find()
+      .populate('createdBy', 'username')
+      .sort({ createdAt: -1 })
+      .limit(5);
+
+    res.render('admin/dashboard', {
+      title: 'Admin Dashboard',
+      totalProducts,
+      totalUsers,
+      recentProducts
+    });
+  } catch (error) {
+    console.error('Dashboard error:', error);
+    req.flash('error', 'Error loading dashboard');
+    res.redirect('/shop');
+  }
+};
+
+// Product Management
+exports.getProducts = async (req, res) => {
+  try {
+    const products = await Product.find()
+      .populate('createdBy', 'username')
+      .sort({ createdAt: -1 });
+    
+    res.render('admin/products', {
+      title: 'Manage Products',
+      products
+    });
+  } catch (error) {
+    console.error('Products error:', error);
+    req.flash('error', 'Error loading products');
+    res.redirect('/admin');
+  }
+};
+
+// Add Product Form
+exports.getAddProduct = (req, res) => {
+  res.render('admin/add-product', {
+    title: 'Add New Product'
+  });
+};
+
+// Create Product
+exports.createProduct = async (req, res) => {
+  try {
+    const {
+      name,
+      description,
+      basePrice,
+      category,
+      sizes,
+      colors,
+      features,
+      stockQuantity
+    } = req.body;
+
+    const images = req.files ? req.files.map(file => file.filename) : [];
+    const mainImage = images.length > 0 ? images[0] : 'default.svg';
+
+    // Parse sizes if provided
+    let parsedSizes = [];
+    if (sizes && typeof sizes === 'string') {
+      try {
+        parsedSizes = JSON.parse(sizes);
+      } catch (e) {
+        console.error('Error parsing sizes:', e);
+      }
+    }
+
+    // Parse colors if provided
+    let parsedColors = [];
+    if (colors && typeof colors === 'string') {
+      try {
+        parsedColors = JSON.parse(colors);
+      } catch (e) {
+        console.error('Error parsing colors:', e);
+      }
+    }
+
+    // Parse features if provided
+    let parsedFeatures = [];
+    if (features) {
+      if (typeof features === 'string') {
+        parsedFeatures = features.split('\n').filter(f => f.trim());
+      } else if (Array.isArray(features)) {
+        parsedFeatures = features;
+      }
+    }
+
+    const product = new Product({
+      name,
+      description,
+      basePrice: parseFloat(basePrice),
+      category,
+      image: mainImage,
+      images,
+      sizes: parsedSizes,
+      colors: parsedColors,
+      features: parsedFeatures,
+      stockQuantity: parseInt(stockQuantity) || 0,
+      createdBy: req.session.userId
+    });
+
+    await product.save();
+    req.flash('success', 'Product created successfully!');
+    res.redirect('/admin/products');
+  } catch (error) {
+    console.error('Create product error:', error);
+    req.flash('error', 'Error creating product');
+    res.redirect('/admin/add-product');
+  }
+};
+
+// Edit Product Form
+exports.getEditProduct = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      req.flash('error', 'Product not found');
+      return res.redirect('/admin/products');
+    }
+
+    res.render('admin/edit-product', {
+      title: 'Edit Product',
+      product
+    });
+  } catch (error) {
+    console.error('Edit product error:', error);
+    req.flash('error', 'Error loading product');
+    res.redirect('/admin/products');
+  }
+};
+
+// Update Product
+exports.updateProduct = async (req, res) => {
+  try {
+    const {
+      name,
+      description,
+      basePrice,
+      category,
+      sizes,
+      colors,
+      features,
+      stockQuantity
+    } = req.body;
+
+    const product = await Product.findById(req.params.id);
+    if (!product) {
+      req.flash('error', 'Product not found');
+      return res.redirect('/admin/products');
+    }
+
+    // Handle new images
+    if (req.files && req.files.length > 0) {
+      const newImages = req.files.map(file => file.filename);
+      product.images = [...product.images, ...newImages];
+      product.image = product.images[0];
+    }
+
+    // Parse and update fields
+    product.name = name;
+    product.description = description;
+    product.basePrice = parseFloat(basePrice);
+    product.category = category;
+    product.stockQuantity = parseInt(stockQuantity) || 0;
+
+    // Parse sizes
+    if (sizes && typeof sizes === 'string') {
+      try {
+        product.sizes = JSON.parse(sizes);
+      } catch (e) {
+        console.error('Error parsing sizes:', e);
+      }
+    }
+
+    // Parse colors
+    if (colors && typeof colors === 'string') {
+      try {
+        product.colors = JSON.parse(colors);
+      } catch (e) {
+        console.error('Error parsing colors:', e);
+      }
+    }
+
+    // Parse features
+    if (features) {
+      if (typeof features === 'string') {
+        product.features = features.split('\n').filter(f => f.trim());
+      } else if (Array.isArray(features)) {
+        product.features = features;
+      }
+    }
+
+    await product.save();
+    req.flash('success', 'Product updated successfully!');
+    res.redirect('/admin/products');
+  } catch (error) {
+    console.error('Update product error:', error);
+    req.flash('error', 'Error updating product');
+    res.redirect('/admin/products');
+  }
+};
+
+// Delete Product
+exports.deleteProduct = async (req, res) => {
+  try {
+    const product = await Product.findByIdAndDelete(req.params.id);
+    if (!product) {
+      req.flash('error', 'Product not found');
+      return res.redirect('/admin/products');
+    }
+
+    // Delete associated images
+    product.images.forEach(image => {
+      const imagePath = path.join(__dirname, '../public/images', image);
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+    });
+
+    req.flash('success', 'Product deleted successfully!');
+    res.redirect('/admin/products');
+  } catch (error) {
+    console.error('Delete product error:', error);
+    req.flash('error', 'Error deleting product');
+    res.redirect('/admin/products');
+  }
+};
+
+// User Management
+exports.getUsers = async (req, res) => {
+  try {
+    const users = await User.find().sort({ createdAt: -1 });
+    res.render('admin/users', {
+      title: 'Manage Users',
+      users
+    });
+  } catch (error) {
+    console.error('Users error:', error);
+    req.flash('error', 'Error loading users');
+    res.redirect('/admin');
+  }
+};
+
+// Update User Role
+exports.updateUserRole = async (req, res) => {
+  try {
+    const { userId, role, permissions } = req.body;
+    
+    const user = await User.findById(userId);
+    if (!user) {
+      req.flash('error', 'User not found');
+      return res.redirect('/admin/users');
+    }
+
+    user.role = role;
+    user.permissions = permissions ? permissions.split(',').map(p => p.trim()) : [];
+    
+    await user.save();
+    req.flash('success', 'User role updated successfully!');
+    res.redirect('/admin/users');
+  } catch (error) {
+    console.error('Update user role error:', error);
+    req.flash('error', 'Error updating user role');
+    res.redirect('/admin/users');
+  }
+};
+
+// File upload middleware
+exports.uploadProductImages = upload.array('images', 5);
+
+module.exports = exports;
