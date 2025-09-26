@@ -123,10 +123,10 @@
             </div>
             <div class="product-actions">
               <form action="/cart/add" method="POST" style="flex: 1;">
-                <input type="hidden" name="productId" value="<%= p.id %>">
+                <input type="hidden" name="productId" value="<%= p._id %>">
                 <button type="submit" class="btn-add-cart">Add to Cart</button>
               </form>
-              <a href="/product/<%= p.id %>" class="btn-details">Details</a>
+              <a href="/product/<%= p._id %>" class="btn-details">Details</a>
             </div>
           </div>
         </div>

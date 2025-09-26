@@ -1,10 +1,15 @@
+// Script to add static products to MongoDB database
+// Usage: node seed-products.js
 
-const Product = require('../models/Product');
+require('dotenv').config();
+const mongoose = require('mongoose');
+const Product = require('./models/Product');
+const User = require('./models/User');
 
+const dbURI = process.env.CONNECTION_STRING;
 
 const staticProducts = [
   { 
-    id: 'p1', 
     name: 'Premium Bedding Set', 
     basePrice: 41.50, 
     description: 'High-quality bedding set with multiple size options. Made from premium materials for maximum comfort.',
@@ -27,10 +32,11 @@ const staticProducts = [
       'Machine washable',
       'Fade-resistant colors',
       'Soft and comfortable'
-    ]
+    ],
+    stockQuantity: 100,
+    inStock: true
   },
   { 
-    id: 'p2', 
     name: 'Designer Jeans', 
     basePrice: 49.99, 
     description: 'Stylish premium denim jeans with perfect fit',
@@ -46,10 +52,16 @@ const staticProducts = [
     colors: [
       { name: 'Blue', code: '#4169E1', image: 'product2.svg' },
       { name: 'Black', code: '#000000', image: 'product2-black.svg' }
-    ]
+    ],
+    features: [
+      'Premium denim fabric',
+      'Comfortable fit',
+      'Durable construction'
+    ],
+    stockQuantity: 50,
+    inStock: true
   },
   { 
-    id: 'p3', 
     name: 'Sport Sneakers', 
     basePrice: 69.99, 
     description: 'Professional athletic shoes for all activities',
@@ -65,10 +77,16 @@ const staticProducts = [
     colors: [
       { name: 'White', code: '#FFFFFF', image: 'product3.svg' },
       { name: 'Red', code: '#FF0000', image: 'product3-red.svg' }
-    ]
+    ],
+    features: [
+      'Breathable material',
+      'Non-slip sole',
+      'Comfortable padding'
+    ],
+    stockQuantity: 30,
+    inStock: true
   },
   { 
-    id: 'p4', 
     name: 'Luxury Wallet', 
     basePrice: 29.99, 
     description: 'Premium leather wallet with multiple compartments',
@@ -78,52 +96,67 @@ const staticProducts = [
     colors: [
       { name: 'Brown', code: '#8B4513', image: 'product4.svg' },
       { name: 'Black', code: '#000000', image: 'product4-black.svg' }
-    ]
+    ],
+    features: [
+      'Genuine leather',
+      'Multiple card slots',
+      'Compact design'
+    ],
+    stockQuantity: 25,
+    inStock: true
   }
-]
+];
 
-const Product = require('../models/Product');
-
-exports.home = async (req, res) => {
+async function seedProducts() {
   try {
-    const products = await Product.find({ inStock: true }).limit(8);
-    res.render('home', { products: products, title: 'Home' });
-  } catch (error) {
-    console.error('Home page error:', error);
-    res.render('home', { products: [], title: 'Home' });
-  }
-}
+    // Connect to database
+    await mongoose.connect(dbURI, { dbName: 'App' });
+    console.log('Connected to MongoDB Atlas...');
 
-exports.viewProducts = async (req, res) => {
-  try {
-    const products = await Product.find({ inStock: true });
-    res.render('shop', { products: products, title: 'Shop' });
-  } catch (error) {
-    console.error('Shop page error:', error);
-    res.render('shop', { products: [], title: 'Shop' });
-  }
-}
-
-exports.viewProduct = async (req, res) => {
-  try {
-    const product = await Product.findById(req.params.id);
-    if (!product) {
-      return res.status(404).render('404');
-    }
+    // Find an admin user to assign as creator
+    let adminUser = await User.findOne({ role: 'admin' });
     
-    res.render('single-product', { product: product, title: product.name });
+    if (!adminUser) {
+      console.log('No admin user found. Creating a system admin...');
+      adminUser = new User({
+        username: 'system',
+        email: 'system@shop.com',
+        password: 'temp123', // This won't be used for login
+        role: 'admin'
+      });
+      await adminUser.save();
+    }
+
+    // Clear existing products (optional - comment out if you want to keep existing)
+    // await Product.deleteMany({});
+    // console.log('Cleared existing products');
+
+    // Add products to database
+    for (const productData of staticProducts) {
+      // Check if product already exists
+      const existingProduct = await Product.findOne({ name: productData.name });
+      
+      if (!existingProduct) {
+        const product = new Product({
+          ...productData,
+          createdBy: adminUser._id
+        });
+        
+        await product.save();
+        console.log(`✅ Added product: ${product.name}`);
+      } else {
+        console.log(`⚠️  Product already exists: ${productData.name}`);
+      }
+    }
+
+    console.log('\n🎉 Product seeding completed!');
+    console.log(`Total products in database: ${await Product.countDocuments()}`);
+    
   } catch (error) {
-    console.error('Product view error:', error);
-    res.status(404).render('404');
+    console.error('Error seeding products:', error);
+  } finally {
+    mongoose.connection.close();
   }
 }
 
-// Helper function to get product by ID (for cart system)
-exports.getProductById = async (productId) => {
-  try {
-    return await Product.findById(productId);
-  } catch (error) {
-    console.error('Error fetching product:', error);
-    return null;
-  }
-}
+seedProducts();

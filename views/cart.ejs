@@ -25,7 +25,7 @@
                 <% } %>
                 <p>Qty: <%= it.quantity %></p>
                 <p>Price: $<%= (it.product.price * it.quantity).toFixed(2) %></p>
-                <a href="/cart/remove/<%= it.product.id %>" class="btn btn-danger btn-sm">Remove</a>
+                <a href="/cart/remove/<%= it.product._id %>" class="btn btn-danger btn-sm">Remove</a>
               </div>
             </div>
           </div>

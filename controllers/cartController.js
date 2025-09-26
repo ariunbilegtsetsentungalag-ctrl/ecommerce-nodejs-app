@@ -5,64 +5,74 @@ exports.viewCart = (req, res) => {
   res.render('cart', { cart, title: 'My Cart' })
 }
 
-exports.addToCart = (req, res) => {
-  const productId = req.body.productId
-  const quantity = parseInt(req.body.quantity) || 1
-  const selectedSize = req.body.selectedSize
-  const selectedColor = req.body.selectedColor
+exports.addToCart = async (req, res) => {
+  try {
+    const productId = req.body.productId
+    const quantity = parseInt(req.body.quantity) || 1
+    const selectedSize = req.body.selectedSize
+    const selectedColor = req.body.selectedColor
 
-  const productController = require('./productController')
-  const product = productController._products.find(p => p.id === productId)
-  if (!product) {
-    req.flash('error', 'Product not found')
-    return res.redirect('/shop')
-  }
-
-
-  let itemPrice = product.basePrice || product.price
-  if (selectedSize && product.sizes) {
-    const sizeOption = product.sizes.find(s => s.name === selectedSize)
-    if (sizeOption) {
-      itemPrice = sizeOption.price
+    const Product = require('../models/Product')
+    const product = await Product.findById(productId)
+    
+    if (!product) {
+      req.flash('error', 'Product not found')
+      return res.redirect('/shop')
     }
-  }
 
-
-  const cartItem = {
-    product: {
-      ...product,
-      price: itemPrice
-    },
-    quantity,
-    options: {
-      size: selectedSize,
-      color: selectedColor
+    // Calculate price based on selected size
+    let itemPrice = product.basePrice
+    if (selectedSize && product.sizes && product.sizes.length > 0) {
+      const sizeOption = product.sizes.find(s => s.name === selectedSize)
+      if (sizeOption) {
+        itemPrice = sizeOption.price
+      }
     }
-  }
 
-  req.session.cart = req.session.cart || { items: [] }
-  
+    // Create cart item with options
+    const cartItem = {
+      product: {
+        _id: product._id,
+        name: product.name,
+        image: product.image,
+        basePrice: product.basePrice,
+        price: itemPrice
+      },
+      quantity,
+      options: {
+        size: selectedSize,
+        color: selectedColor
+      }
+    }
 
-  const existing = req.session.cart.items.find(item => 
-    item.product.id === product.id && 
-    item.options.size === selectedSize && 
-    item.options.color === selectedColor
-  )
-  
-  if (existing) {
-    existing.quantity += quantity
-  } else {
-    req.session.cart.items.push(cartItem)
+    req.session.cart = req.session.cart || { items: [] }
+    
+    // Check if same product with same options exists
+    const existing = req.session.cart.items.find(item => 
+      item.product._id.toString() === product._id.toString() && 
+      item.options.size === selectedSize && 
+      item.options.color === selectedColor
+    )
+    
+    if (existing) {
+      existing.quantity += quantity
+    } else {
+      req.session.cart.items.push(cartItem)
+    }
+    
+    req.flash('success', `Added ${product.name} to cart`)
+    res.redirect('/shop')
+  } catch (error) {
+    console.error('Add to cart error:', error)
+    req.flash('error', 'Error adding product to cart')
+    res.redirect('/shop')
   }
-  
-  req.flash('success', `Added ${product.name} to cart`)
-  res.redirect('/shop')
 }
 
 exports.removeFromCart = (req, res) => {
   const id = req.params.id
   req.session.cart = req.session.cart || { items: [] }
-  req.session.cart.items = req.session.cart.items.filter(i => i.product.id !== id)
+  req.session.cart.items = req.session.cart.items.filter(i => i.product._id.toString() !== id)
   res.redirect('/cart')
 }
 
@@ -80,7 +90,7 @@ exports.checkout = async (req, res) => {
     const order = new Order({
       user: req.session.userId,
       products: cart.items.map(item => ({
-        productId: item.product.id,
+        productId: item.product._id,
         name: item.product.name,
         price: item.product.price,
         quantity: item.quantity

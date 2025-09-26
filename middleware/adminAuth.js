@@ -1,4 +1,4 @@
-// Middleware to check if user is authenticated
+
 const isAuthenticated = (req, res, next) => {
   if (req.session.userId) {
     next();
@@ -8,7 +8,7 @@ const isAuthenticated = (req, res, next) => {
   }
 };
 
-// Middleware to check if user has admin or product manager role
+
 const isAdminOrProductManager = (req, res, next) => {
   if (req.session.user && 
       (req.session.user.role === 'admin' || req.session.user.role === 'product_manager')) {
@@ -19,7 +19,7 @@ const isAdminOrProductManager = (req, res, next) => {
   }
 };
 
-// Middleware to check if user is admin only
+
 const isAdmin = (req, res, next) => {
   if (req.session.user && req.session.user.role === 'admin') {
     next();
@@ -29,7 +29,7 @@ const isAdmin = (req, res, next) => {
   }
 };
 
-// Middleware to check specific permissions
+
 const hasPermission = (permission) => {
   return (req, res, next) => {
     if (req.session.user && 

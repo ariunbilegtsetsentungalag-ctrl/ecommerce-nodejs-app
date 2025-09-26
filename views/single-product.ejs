@@ -251,7 +251,7 @@
                 <p class="product-description"><%= product.description %></p>
 
                 <form action="/cart/add" method="POST" id="productForm">
-                    <input type="hidden" name="productId" value="<%= product.id %>">
+                    <input type="hidden" name="productId" value="<%= product._id %>">
                     
                     <% if (product.sizes && product.sizes.length > 0) { %>
                     <div class="option-section">
@@ -337,14 +337,11 @@
         }
 
         function selectColor(colorName, imageSrc) {
-            // Update selected color
             document.querySelectorAll('.color-option').forEach(opt => opt.classList.remove('selected'));
             event.target.classList.add('selected');
             
-            // Update hidden input
             document.getElementById('selectedColor').value = colorName;
             
-            // Update main image if color has specific image
             if (imageSrc && imageSrc !== '<%= product.image %>') {
                 document.getElementById('mainImage').src = '/images/' + imageSrc;
             }
