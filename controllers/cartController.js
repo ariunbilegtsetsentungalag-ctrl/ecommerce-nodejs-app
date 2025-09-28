@@ -20,19 +20,16 @@ exports.addToCart = async (req, res) => {
       return res.redirect('/shop')
     }
 
-    // Check if product is in stock
     if (!product.inStock) {
       req.flash('error', 'This product is currently out of stock')
       return res.redirect('/shop')
     }
 
-    // Check available quantity
     if (product.stockQuantity < quantity) {
       req.flash('error', `Only ${product.stockQuantity} items available in stock`)
       return res.redirect(`/product/${productId}`)
     }
 
-    // Check total quantity in cart + new quantity
     req.session.cart = req.session.cart || { items: [] }
     const existingCartItem = req.session.cart.items.find(item => 
       item.product._id.toString() === product._id.toString() && 
@@ -48,7 +45,7 @@ exports.addToCart = async (req, res) => {
       return res.redirect(`/product/${productId}`)
     }
 
-    // Calculate price based on selected size
+  
     let itemPrice = product.basePrice
     if (selectedSize && product.sizes && product.sizes.length > 0) {
       const sizeOption = product.sizes.find(s => s.name === selectedSize)
@@ -57,7 +54,6 @@ exports.addToCart = async (req, res) => {
       }
     }
 
-    // Create cart item with options
     const cartItem = {
       product: {
         _id: product._id,
@@ -75,7 +71,6 @@ exports.addToCart = async (req, res) => {
 
     req.session.cart = req.session.cart || { items: [] }
     
-    // Check if same product with same options exists
     const existing = req.session.cart.items.find(item => 
       item.product._id.toString() === product._id.toString() && 
       item.options.size === selectedSize && 
@@ -112,7 +107,6 @@ exports.checkout = async (req, res) => {
       return res.redirect('/cart')
     }
 
-    // Validate stock availability before processing order
     const Product = require('../models/Product')
     for (const item of cart.items) {
       const product = await Product.findById(item.product._id)
@@ -129,7 +123,6 @@ exports.checkout = async (req, res) => {
     const totalAmount = cart.items.reduce((total, item) => 
       total + (item.product.price * item.quantity), 0)
 
-    // Create the order
     const order = new Order({
       user: req.session.userId,
       products: cart.items.map(item => ({
@@ -143,7 +136,7 @@ exports.checkout = async (req, res) => {
 
     await order.save()
 
-    // Reduce stock quantities for each purchased item
+
     for (const item of cart.items) {
       const newStockQuantity = await Product.findByIdAndUpdate(
         item.product._id,
@@ -153,7 +146,6 @@ exports.checkout = async (req, res) => {
         { new: true }
       )
 
-      // If stock reaches 0, mark as out of stock
       if (newStockQuantity.stockQuantity <= 0) {
         await Product.findByIdAndUpdate(
           item.product._id,
