@@ -3,7 +3,7 @@ const Product = require('../models/Product');
 
 exports.home = async (req, res) => {
   try {
-    const products = await Product.find({ inStock: true }).limit(8);
+    const products = await Product.find({}).sort({ inStock: -1, stockQuantity: -1 }).limit(8);
     res.render('home', { products: products, title: 'Home' });
   } catch (error) {
     console.error('Home page error:', error);
@@ -13,7 +13,7 @@ exports.home = async (req, res) => {
 
 exports.viewProducts = async (req, res) => {
   try {
-    const products = await Product.find({ inStock: true });
+    const products = await Product.find({}).sort({ inStock: -1, stockQuantity: -1 });
     res.render('shop', { products: products, title: 'Shop' });
   } catch (error) {
     console.error('Shop page error:', error);
