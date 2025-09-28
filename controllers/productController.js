@@ -23,15 +23,26 @@ exports.viewProducts = async (req, res) => {
 
 exports.viewProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    let product;
+    const id = req.params.id;
+    
+    // Check if it's a valid MongoDB ObjectId (24 hex characters)
+    if (id.match(/^[0-9a-fA-F]{24}$/)) {
+      // Try to find by MongoDB _id
+      product = await Product.findById(id);
+    } else {
+      // Try to find by productId for legacy products
+      product = await Product.findOne({ productId: id });
+    }
+    
     if (!product) {
-      return res.status(404).render('404');
+      return res.status(404).render('404', { title: '404 - Product Not Found' });
     }
     
     res.render('single-product', { product: product, title: product.name });
   } catch (error) {
     console.error('Product view error:', error);
-    res.status(404).render('404');
+    res.status(404).render('404', { title: '404 - Product Not Found' });
   }
 }
 
