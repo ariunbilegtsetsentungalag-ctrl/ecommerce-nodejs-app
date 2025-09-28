@@ -56,7 +56,6 @@ exports.dashboard = async (req, res) => {
   }
 };
 
-// Product Management
 exports.getProducts = async (req, res) => {
   try {
     const products = await Product.find()
@@ -74,14 +73,13 @@ exports.getProducts = async (req, res) => {
   }
 };
 
-// Add Product Form
+
 exports.getAddProduct = (req, res) => {
   res.render('admin/add-product', {
     title: 'Add New Product'
   });
 };
 
-// Create Product
 exports.createProduct = async (req, res) => {
   try {
     const {
@@ -275,7 +273,8 @@ exports.getUsers = async (req, res) => {
     const users = await User.find().sort({ createdAt: -1 });
     res.render('admin/users', {
       title: 'Manage Users',
-      users
+      users,
+      userId: req.session.userId
     });
   } catch (error) {
     console.error('Users error:', error);

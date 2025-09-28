@@ -1,0 +1,238 @@
+<%- include('../include/header') %>
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-md-2">
+            <!-- Admin Sidebar -->
+            <div class="list-group">
+                <a href="/admin" class="list-group-item list-group-item-action">
+                    📊 Dashboard
+                </a>
+                <a href="/admin/products" class="list-group-item list-group-item-action">
+                    📦 Products
+                </a>
+                <a href="/admin/add-product" class="list-group-item list-group-item-action">
+                    ➕ Add Product
+                </a>
+                <a href="/admin/users" class="list-group-item list-group-item-action">
+                    👥 Users
+                </a>
+            </div>
+        </div>
+        
+        <div class="col-md-10">
+            <h2>Edit Product: <%= product.name %></h2>
+            
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST" action="/admin/products/<%= product._id %>" enctype="multipart/form-data">
+                        <!-- Basic Information -->
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="name" class="form-label">Product Name *</label>
+                                <input type="text" class="form-control" id="name" name="name" value="<%= product.name %>" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="basePrice" class="form-label">Base Price *</label>
+                                <input type="number" step="0.01" class="form-control" id="basePrice" name="basePrice" value="<%= product.basePrice %>" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="stockQuantity" class="form-label">Stock Quantity *</label>
+                                <input type="number" class="form-control" id="stockQuantity" name="stockQuantity" value="<%= product.stockQuantity || 0 %>" min="0" required>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="category" class="form-label">Category *</label>
+                                <select class="form-select" id="category" name="category" required>
+                                    <option value="">Select Category</option>
+                                    <option value="Clothing" <%= product.category === 'Clothing' ? 'selected' : '' %>>Clothing</option>
+                                    <option value="Shoes" <%= product.category === 'Shoes' ? 'selected' : '' %>>Shoes</option>
+                                    <option value="Accessories" <%= product.category === 'Accessories' ? 'selected' : '' %>>Accessories</option>
+                                    <option value="Home & Living" <%= product.category === 'Home & Living' ? 'selected' : '' %>>Home & Living</option>
+                                    <option value="Electronics" <%= product.category === 'Electronics' ? 'selected' : '' %>>Electronics</option>
+                                    <option value="Sports" <%= product.category === 'Sports' ? 'selected' : '' %>>Sports</option>
+                                    <option value="Other" <%= product.category === 'Other' ? 'selected' : '' %>>Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="images" class="form-label">Add New Images</label>
+                                <input type="file" class="form-control" id="images" name="images" multiple accept="image/*">
+                                <div class="form-text">Current images will be kept. Add new ones here.</div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description *</label>
+                            <textarea class="form-control" id="description" name="description" rows="3" required><%= product.description %></textarea>
+                        </div>
+
+                        <!-- Current Images -->
+                        <% if (product.images && product.images.length > 0) { %>
+                        <div class="mb-3">
+                            <label class="form-label">Current Images:</label>
+                            <div class="row">
+                                <% product.images.forEach(image => { %>
+                                    <div class="col-md-2 mb-2">
+                                        <img src="/images/<%= image %>" class="img-thumbnail" style="width: 100px; height: 100px; object-fit: cover;">
+                                    </div>
+                                <% }) %>
+                            </div>
+                        </div>
+                        <% } %>
+
+                        <!-- Features -->
+                        <div class="mb-3">
+                            <label for="features" class="form-label">Features (one per line)</label>
+                            <textarea class="form-control" id="features" name="features" rows="4"><%= product.features ? product.features.join('\n') : '' %></textarea>
+                        </div>
+
+                        <!-- Sizes -->
+                        <div class="mb-3">
+                            <label class="form-label">Sizes & Prices</label>
+                            <div id="sizesContainer">
+                                <% if (product.sizes && product.sizes.length > 0) { %>
+                                    <% product.sizes.forEach((size, index) => { %>
+                                        <div class="row mb-2">
+                                            <div class="col-md-4">
+                                                <input type="text" class="form-control" placeholder="Size name" value="<%= size.name %>" data-size-name="<%= index %>">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <input type="number" step="0.01" class="form-control" placeholder="Price" value="<%= size.price %>" data-size-price="<%= index %>">
+                                            </div>
+                                            <div class="col-md-4">
+                                                <button type="button" class="btn btn-danger" onclick="removeSize(this)">Remove</button>
+                                            </div>
+                                        </div>
+                                    <% }) %>
+                                <% } %>
+                            </div>
+                            <button type="button" class="btn btn-secondary" onclick="addSize()">Add Size</button>
+                        </div>
+
+                        <!-- Colors -->
+                        <div class="mb-3">
+                            <label class="form-label">Colors</label>
+                            <div id="colorsContainer">
+                                <% if (product.colors && product.colors.length > 0) { %>
+                                    <% product.colors.forEach((color, index) => { %>
+                                        <div class="row mb-2">
+                                            <div class="col-md-3">
+                                                <input type="text" class="form-control" placeholder="Color name" value="<%= color.name %>" data-color-name="<%= index %>">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <input type="color" class="form-control form-control-color" value="<%= color.code %>" data-color-code="<%= index %>">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <input type="text" class="form-control" placeholder="Image filename" value="<%= color.image || '' %>" data-color-image="<%= index %>">
+                                            </div>
+                                            <div class="col-md-3">
+                                                <button type="button" class="btn btn-danger" onclick="removeColor(this)">Remove</button>
+                                            </div>
+                                        </div>
+                                    <% }) %>
+                                <% } %>
+                            </div>
+                            <button type="button" class="btn btn-secondary" onclick="addColor()">Add Color</button>
+                        </div>
+
+                        <!-- Hidden fields for sizes and colors -->
+                        <input type="hidden" id="sizesJson" name="sizes" value="">
+                        <input type="hidden" id="colorsJson" name="colors" value="">
+
+                        <div class="d-flex justify-content-between">
+                            <a href="/admin/products" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">Update Product</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Same JavaScript functions as add-product.ejs
+function addSize() {
+    const container = document.getElementById('sizesContainer');
+    const div = document.createElement('div');
+    div.className = 'row mb-2';
+    div.innerHTML = `
+        <div class="col-md-4">
+            <input type="text" class="form-control" placeholder="Size name" data-size-name="">
+        </div>
+        <div class="col-md-4">
+            <input type="number" step="0.01" class="form-control" placeholder="Price" data-size-price="">
+        </div>
+        <div class="col-md-4">
+            <button type="button" class="btn btn-danger" onclick="removeSize(this)">Remove</button>
+        </div>
+    `;
+    container.appendChild(div);
+}
+
+function removeSize(btn) {
+    btn.closest('.row').remove();
+}
+
+function addColor() {
+    const container = document.getElementById('colorsContainer');
+    const div = document.createElement('div');
+    div.className = 'row mb-2';
+    div.innerHTML = `
+        <div class="col-md-3">
+            <input type="text" class="form-control" placeholder="Color name" data-color-name="">
+        </div>
+        <div class="col-md-3">
+            <input type="color" class="form-control form-control-color" data-color-code="">
+        </div>
+        <div class="col-md-3">
+            <input type="text" class="form-control" placeholder="Image filename" data-color-image="">
+        </div>
+        <div class="col-md-3">
+            <button type="button" class="btn btn-danger" onclick="removeColor(this)">Remove</button>
+        </div>
+    `;
+    container.appendChild(div);
+}
+
+function removeColor(btn) {
+    btn.closest('.row').remove();
+}
+
+// Form submission handler
+document.querySelector('form').addEventListener('submit', function(e) {
+    // Collect sizes
+    const sizes = [];
+    document.querySelectorAll('[data-size-name]').forEach((nameInput, index) => {
+        const priceInput = document.querySelector(`[data-size-price="${index}"]`) || 
+                          document.querySelectorAll('[data-size-price]')[index];
+        if (nameInput.value && priceInput && priceInput.value) {
+            sizes.push({
+                name: nameInput.value,
+                price: parseFloat(priceInput.value)
+            });
+        }
+    });
+    document.getElementById('sizesJson').value = JSON.stringify(sizes);
+
+    // Collect colors
+    const colors = [];
+    document.querySelectorAll('[data-color-name]').forEach((nameInput, index) => {
+        const codeInput = document.querySelector(`[data-color-code="${index}"]`) || 
+                         document.querySelectorAll('[data-color-code]')[index];
+        const imageInput = document.querySelector(`[data-color-image="${index}"]`) || 
+                          document.querySelectorAll('[data-color-image]')[index];
+        if (nameInput.value && codeInput && codeInput.value) {
+            colors.push({
+                name: nameInput.value,
+                code: codeInput.value,
+                image: imageInput ? imageInput.value : ''
+            });
+        }
+    });
+    document.getElementById('colorsJson').value = JSON.stringify(colors);
+});
+</script>
+
+<%- include('../include/footer') %>
