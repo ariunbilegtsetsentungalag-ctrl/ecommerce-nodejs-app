@@ -107,8 +107,43 @@ app.use((req, res) => {
 });
 
 const PORT = process.env.PORT || 9005;
+
+function getLocalIP() {
+  const { networkInterfaces } = require('os');
+  const nets = networkInterfaces();
+  const results = {};
+
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+      if (net.family === 'IPv4' && !net.internal) {
+        if (!results[name]) {
+          results[name] = [];
+        }
+        results[name].push(net.address);
+      }
+    }
+  }
+
+  const interfaces = Object.keys(results);
+  if (interfaces.length > 0) {
+    const preferred = interfaces.find(name => 
+      name.toLowerCase().includes('wi-fi') || 
+      name.toLowerCase().includes('ethernet') ||
+      name.toLowerCase().includes('wireless')
+    ) || interfaces[0];
+    
+    return results[preferred][0];
+  }
+  
+  return 'localhost';
+}
+
 app.listen(PORT, '0.0.0.0', () => {
+  const localIP = getLocalIP();
   console.log(`Server is running on http://localhost:${PORT}`);
-  console.log(`Network access: http://192.168.70.152:${PORT}`);
+  console.log(`Network access: http://${localIP}:${PORT}`);
+  console.log(`\n🌐 Access from other devices on your network:`);
+  console.log(`   • Local: http://localhost:${PORT}`);
+  console.log(`   • Network: http://${localIP}:${PORT}`);
 });
 module.exports = app;

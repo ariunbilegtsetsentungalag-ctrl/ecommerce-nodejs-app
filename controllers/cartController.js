@@ -20,7 +20,7 @@ exports.addToCart = async (req, res) => {
       return res.redirect('/shop')
     }
 
-    if (!product.inStock) {
+    if (product.stockQuantity <= 0) {
       req.flash('error', 'This product is currently out of stock')
       return res.redirect('/shop')
     }
@@ -114,7 +114,7 @@ exports.checkout = async (req, res) => {
         req.flash('error', `Product ${item.product.name} no longer exists`)
         return res.redirect('/cart')
       }
-      if (!product.inStock || product.stockQuantity < item.quantity) {
+      if (product.stockQuantity < item.quantity) {
         req.flash('error', `${item.product.name} is out of stock or insufficient quantity available`)
         return res.redirect('/cart')
       }
@@ -156,6 +156,10 @@ exports.checkout = async (req, res) => {
         )
         console.log(`⚠️ Product "${item.product.name}" is now out of stock`)
       } else {
+        await Product.findByIdAndUpdate(
+          item.product._id,
+          { inStock: true }
+        )
         console.log(`📦 Updated stock for "${item.product.name}": ${newStockQuantity.stockQuantity} remaining`)
       }
     }

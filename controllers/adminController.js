@@ -30,10 +30,9 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({ 
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+  limits: { fileSize: 5 * 1024 * 1024 } 
 });
 
-// Admin Dashboard
 exports.dashboard = async (req, res) => {
   try {
     const totalProducts = await Product.countDocuments();
@@ -96,7 +95,6 @@ exports.createProduct = async (req, res) => {
     const images = req.files ? req.files.map(file => file.filename) : [];
     const mainImage = images.length > 0 ? images[0] : 'default.svg';
 
-    // Parse sizes if provided
     let parsedSizes = [];
     if (sizes && typeof sizes === 'string') {
       try {
@@ -136,6 +134,7 @@ exports.createProduct = async (req, res) => {
       colors: parsedColors,
       features: parsedFeatures,
       stockQuantity: parseInt(stockQuantity) || 0,
+      inStock: parseInt(stockQuantity) > 0,
       createdBy: req.session.userId
     });
 
@@ -201,6 +200,7 @@ exports.updateProduct = async (req, res) => {
     product.basePrice = parseFloat(basePrice);
     product.category = category;
     product.stockQuantity = parseInt(stockQuantity) || 0;
+    product.inStock = parseInt(stockQuantity) > 0;
 
 
     if (sizes && typeof sizes === 'string') {

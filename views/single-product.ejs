@@ -301,7 +301,7 @@
                     <!-- Stock Information -->
                     <div class="option-section">
                         <label class="option-label">Availability:</label>
-                        <% if (product.inStock && product.stockQuantity > 0) { %>
+                        <% if (product.stockQuantity > 0) { %>
                             <% if (product.stockQuantity <= 5) { %>
                                 <p style="color: #ff6b35; font-weight: bold;">⚠️ Only <%= product.stockQuantity %> left in stock!</p>
                             <% } else if (product.stockQuantity <= 10) { %>
@@ -314,7 +314,7 @@
                         <% } %>
                     </div>
 
-                    <% if (product.inStock && product.stockQuantity > 0) { %>
+                    <% if (product.stockQuantity > 0) { %>
                     <div class="quantity-section">
                         <label class="option-label">Quantity:</label>
                         <div class="quantity-controls">

@@ -9,7 +9,6 @@ const dbURI = process.env.CONNECTION_STRING;
 
 async function makeAdmin() {
   try {
-    // Connect to database
     await mongoose.connect(dbURI, { dbName: 'App' });
     console.log('Connected to MongoDB Atlas...');
 
@@ -21,7 +20,6 @@ async function makeAdmin() {
       process.exit(1);
     }
 
-    // Find user and make them admin
     const user = await User.findOne({ username });
     
     if (!user) {
