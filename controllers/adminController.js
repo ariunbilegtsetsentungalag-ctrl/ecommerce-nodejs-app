@@ -106,7 +106,6 @@ exports.createProduct = async (req, res) => {
       }
     }
 
-    // Parse colors if provided
     let parsedColors = [];
     if (colors && typeof colors === 'string') {
       try {
@@ -116,7 +115,7 @@ exports.createProduct = async (req, res) => {
       }
     }
 
-    // Parse features if provided
+
     let parsedFeatures = [];
     if (features) {
       if (typeof features === 'string') {
@@ -150,7 +149,7 @@ exports.createProduct = async (req, res) => {
   }
 };
 
-// Edit Product Form
+
 exports.getEditProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
@@ -170,7 +169,7 @@ exports.getEditProduct = async (req, res) => {
   }
 };
 
-// Update Product
+
 exports.updateProduct = async (req, res) => {
   try {
     const {
@@ -190,21 +189,20 @@ exports.updateProduct = async (req, res) => {
       return res.redirect('/admin/products');
     }
 
-    // Handle new images
+
     if (req.files && req.files.length > 0) {
       const newImages = req.files.map(file => file.filename);
       product.images = [...product.images, ...newImages];
       product.image = product.images[0];
     }
 
-    // Parse and update fields
     product.name = name;
     product.description = description;
     product.basePrice = parseFloat(basePrice);
     product.category = category;
     product.stockQuantity = parseInt(stockQuantity) || 0;
 
-    // Parse sizes
+
     if (sizes && typeof sizes === 'string') {
       try {
         product.sizes = JSON.parse(sizes);
@@ -213,7 +211,7 @@ exports.updateProduct = async (req, res) => {
       }
     }
 
-    // Parse colors
+
     if (colors && typeof colors === 'string') {
       try {
         product.colors = JSON.parse(colors);
@@ -222,7 +220,6 @@ exports.updateProduct = async (req, res) => {
       }
     }
 
-    // Parse features
     if (features) {
       if (typeof features === 'string') {
         product.features = features.split('\n').filter(f => f.trim());
@@ -241,7 +238,6 @@ exports.updateProduct = async (req, res) => {
   }
 };
 
-// Delete Product
 exports.deleteProduct = async (req, res) => {
   try {
     const product = await Product.findByIdAndDelete(req.params.id);
@@ -250,7 +246,6 @@ exports.deleteProduct = async (req, res) => {
       return res.redirect('/admin/products');
     }
 
-    // Delete associated images
     product.images.forEach(image => {
       const imagePath = path.join(__dirname, '../public/images', image);
       if (fs.existsSync(imagePath)) {
@@ -267,7 +262,7 @@ exports.deleteProduct = async (req, res) => {
   }
 };
 
-// User Management
+
 exports.getUsers = async (req, res) => {
   try {
     const users = await User.find().sort({ createdAt: -1 });
@@ -283,7 +278,7 @@ exports.getUsers = async (req, res) => {
   }
 };
 
-// Update User Role
+
 exports.updateUserRole = async (req, res) => {
   try {
     const { userId, role, permissions } = req.body;
@@ -307,7 +302,7 @@ exports.updateUserRole = async (req, res) => {
   }
 };
 
-// File upload middleware
+
 exports.uploadProductImages = upload.array('images', 5);
 
 module.exports = exports;
