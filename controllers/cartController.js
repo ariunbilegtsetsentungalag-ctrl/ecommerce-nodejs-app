@@ -154,13 +154,11 @@ exports.checkout = async (req, res) => {
             inStock: false 
           }
         )
-        console.log(`⚠️ Product "${item.product.name}" is now out of stock`)
       } else {
         await Product.findByIdAndUpdate(
           item.product._id,
           { inStock: true }
         )
-        console.log(`📦 Updated stock for "${item.product.name}": ${newStockQuantity.stockQuantity} remaining`)
       }
     }
 
