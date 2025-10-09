@@ -86,6 +86,9 @@
                 <a href="/admin/users">
                     <i class="fas fa-users"></i> Manage Users
                 </a>
+                <a href="/admin/income-analytics">
+                    <i class="fas fa-chart-line"></i> Income Analytics
+                </a>
             </div>
             
             <!-- Main Content -->
@@ -110,6 +113,11 @@
                             <div class="col-md-3">
                                 <label for="stockQuantity" class="form-label">Stock Quantity *</label>
                                 <input type="number" class="form-control" id="stockQuantity" name="stockQuantity" value="<%= product.stockQuantity || 0 %>" min="0" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="deliveryTime" class="form-label">Delivery Time (days)</label>
+                                <input type="number" class="form-control" id="deliveryTime" name="deliveryTime" value="<%= product.deliveryTime || 14 %>" min="1" max="365">
+                                <small class="form-text text-muted">Number of days for delivery</small>
                             </div>
                         </div>
 

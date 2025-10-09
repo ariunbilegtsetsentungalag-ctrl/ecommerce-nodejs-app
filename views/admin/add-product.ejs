@@ -144,6 +144,9 @@
                 <a href="/admin/users">
                     <i class="fas fa-users"></i> Manage Users
                 </a>
+                <a href="/admin/income-analytics">
+                    <i class="fas fa-chart-line"></i> Income Analytics
+                </a>
                 <hr style="border-color: #3498db;">
                 <a href="/shop">
                     <i class="fas fa-store"></i> View Shop
@@ -203,6 +206,13 @@
                                 <div class="mb-3">
                                     <label for="stockQuantity" class="form-label">Stock Quantity</label>
                                     <input type="number" class="form-control" id="stockQuantity" name="stockQuantity" value="0">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="mb-3">
+                                    <label for="deliveryTime" class="form-label">Delivery Time (days)</label>
+                                    <input type="number" class="form-control" id="deliveryTime" name="deliveryTime" value="14" min="1" max="365">
+                                    <small class="form-text text-muted">Number of days for delivery</small>
                                 </div>
                             </div>
                         </div>

@@ -1,5 +1,6 @@
 const Product = require('../models/Product');
 const User = require('../models/User');
+const Order = require('../models/Order');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -40,7 +41,8 @@ exports.dashboard = async (req, res) => {
     const recentProducts = await Product.find()
       .populate('createdBy', 'username')
       .sort({ createdAt: -1 })
-      .limit(5);
+      .limit(5)
+      .lean();
 
     res.render('admin/dashboard', {
       title: 'Admin Dashboard',
@@ -57,13 +59,26 @@ exports.dashboard = async (req, res) => {
 
 exports.getProducts = async (req, res) => {
   try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = 20; // Products per page
+    const skip = (page - 1) * limit;
+
+    const totalProducts = await Product.countDocuments();
+    const totalPages = Math.ceil(totalProducts / limit);
+
     const products = await Product.find()
       .populate('createdBy', 'username')
-      .sort({ createdAt: -1 });
-    
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
     res.render('admin/products', {
       title: 'Manage Products',
-      products
+      products,
+      currentPage: page,
+      totalPages,
+      totalProducts
     });
   } catch (error) {
     console.error('Products error:', error);
@@ -134,6 +149,7 @@ exports.createProduct = async (req, res) => {
       colors: parsedColors,
       features: parsedFeatures,
       stockQuantity: parseInt(stockQuantity) || 0,
+      deliveryTime: parseInt(req.body.deliveryTime) || 14,
       inStock: parseInt(stockQuantity) > 0,
       createdBy: req.session.userId
     });
@@ -151,7 +167,7 @@ exports.createProduct = async (req, res) => {
 
 exports.getEditProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product = await Product.findById(req.params.id).lean();
     if (!product) {
       req.flash('error', 'Product not found');
       return res.redirect('/admin/products');
@@ -200,6 +216,7 @@ exports.updateProduct = async (req, res) => {
     product.basePrice = parseFloat(basePrice);
     product.category = category;
     product.stockQuantity = parseInt(stockQuantity) || 0;
+    product.deliveryTime = parseInt(req.body.deliveryTime) || 14;
     product.inStock = parseInt(stockQuantity) > 0;
 
 
@@ -265,11 +282,26 @@ exports.deleteProduct = async (req, res) => {
 
 exports.getUsers = async (req, res) => {
   try {
-    const users = await User.find().sort({ createdAt: -1 });
+    const page = parseInt(req.query.page) || 1;
+    const limit = 20;
+    const skip = (page - 1) * limit;
+
+    const totalUsers = await User.countDocuments();
+    const totalPages = Math.ceil(totalUsers / limit);
+
+    const users = await User.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit)
+      .lean();
+
     res.render('admin/users', {
       title: 'Manage Users',
       users,
-      userId: req.session.userId
+      userId: req.session.userId,
+      currentPage: page,
+      totalPages,
+      totalUsers
     });
   } catch (error) {
     console.error('Users error:', error);
@@ -304,5 +336,122 @@ exports.updateUserRole = async (req, res) => {
 
 
 exports.uploadProductImages = upload.array('images', 5);
+
+exports.getIncomeAnalytics = async (req, res) => {
+  try {
+    const now = new Date();
+    const thisYear = now.getFullYear();
+    const thisMonth = now.getMonth();
+    
+    const last30Days = new Date(now);
+    last30Days.setDate(now.getDate() - 30);
+    
+    const dailyIncome = await Order.aggregate([
+      {
+        $match: {
+          orderDate: { $gte: last30Days }
+        }
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$orderDate" },
+            month: { $month: "$orderDate" },
+            day: { $dayOfMonth: "$orderDate" }
+          },
+          totalIncome: { $sum: "$totalAmount" },
+          orderCount: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1 }
+      }
+    ]);
+
+    // Monthly income for the current year
+    const monthlyIncome = await Order.aggregate([
+      {
+        $match: {
+          orderDate: {
+            $gte: new Date(thisYear, 0, 1),
+            $lt: new Date(thisYear + 1, 0, 1)
+          }
+        }
+      },
+      {
+        $group: {
+          _id: { $month: "$orderDate" },
+          totalIncome: { $sum: "$totalAmount" },
+          orderCount: { $sum: 1 }
+        }
+      },
+      {
+        $sort: { "_id": 1 }
+      }
+    ]);
+
+    // Total statistics
+    const totalStats = await Order.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: "$totalAmount" },
+          totalOrders: { $sum: 1 },
+          averageOrderValue: { $avg: "$totalAmount" }
+        }
+      }
+    ]);
+
+    // This month's stats
+    const thisMonthStart = new Date(thisYear, thisMonth, 1);
+    const thisMonthEnd = new Date(thisYear, thisMonth + 1, 1);
+    
+    const thisMonthStats = await Order.aggregate([
+      {
+        $match: {
+          orderDate: {
+            $gte: thisMonthStart,
+            $lt: thisMonthEnd
+          }
+        }
+      },
+      {
+        $group: {
+          _id: null,
+          totalRevenue: { $sum: "$totalAmount" },
+          totalOrders: { $sum: 1 }
+        }
+      }
+    ]);
+
+    // Top selling products by revenue
+    const topProducts = await Order.aggregate([
+      { $unwind: "$products" },
+      {
+        $group: {
+          _id: "$products.productId",
+          productName: { $first: "$products.name" },
+          totalRevenue: { $sum: { $multiply: ["$products.price", "$products.quantity"] } },
+          totalQuantity: { $sum: "$products.quantity" }
+        }
+      },
+      { $sort: { totalRevenue: -1 } },
+      { $limit: 5 }
+    ]);
+
+    res.render('admin/income-analytics', {
+      title: 'Income Analytics',
+      dailyIncome,
+      monthlyIncome,
+      totalStats: totalStats[0] || { totalRevenue: 0, totalOrders: 0, averageOrderValue: 0 },
+      thisMonthStats: thisMonthStats[0] || { totalRevenue: 0, totalOrders: 0 },
+      topProducts
+    });
+  } catch (error) {
+    console.error('Income analytics error:', error);
+    req.flash('error', 'Error loading income analytics');
+    res.redirect('/admin');
+  }
+};
 
 module.exports = exports;

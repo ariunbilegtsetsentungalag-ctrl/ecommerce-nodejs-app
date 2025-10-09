@@ -96,6 +96,9 @@
                 <a href="/admin/users">
                     <i class="fas fa-users"></i> Manage Users
                 </a>
+                <a href="/admin/income-analytics">
+                    <i class="fas fa-chart-line"></i> Income Analytics
+                </a>
                 <hr style="border-color: #3498db;">
                 <a href="/shop">
                     <i class="fas fa-store"></i> View Shop
@@ -149,6 +152,7 @@
                                         <th>Category</th>
                                         <th>Price</th>
                                         <th>Stock</th>
+                                        <th>Delivery</th>
                                         <th>Created By</th>
                                         <th>Date</th>
                                         <th>Actions</th>
@@ -180,6 +184,12 @@
                                                 <% } else { %>
                                                     <span class="badge bg-warning">Out of Stock</span>
                                                 <% } %>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-info">
+                                                    <i class="fas fa-truck me-1"></i>
+                                                    <%= product.deliveryTime || 14 %> days
+                                                </span>
                                             </td>
                                             <td>
                                                 <% if (product.createdBy && product.createdBy.username) { %>
@@ -230,6 +240,54 @@
                             <a href="/admin/add-product" class="btn btn-success btn-lg">
                                 <i class="fas fa-plus"></i> Add Your First Product
                             </a>
+                        </div>
+                    <% } %>
+
+                    <!-- Pagination -->
+                    <% if (typeof totalPages !== 'undefined' && totalPages > 1) { %>
+                        <div class="d-flex justify-content-between align-items-center mt-4">
+                            <div class="text-muted">
+                                Showing page <%= currentPage %> of <%= totalPages %> (Total: <%= totalProducts %> products)
+                            </div>
+                            <nav aria-label="Product pagination">
+                                <ul class="pagination mb-0">
+                                    <% if (currentPage > 1) { %>
+                                        <li class="page-item">
+                                            <a class="page-link" href="/admin/products?page=<%= currentPage - 1 %>">Previous</a>
+                                        </li>
+                                    <% } %>
+
+                                    <%
+                                        const startPage = Math.max(1, currentPage - 2);
+                                        const endPage = Math.min(totalPages, currentPage + 2);
+
+                                        if (startPage > 1) { %>
+                                            <li class="page-item"><a class="page-link" href="/admin/products?page=1">1</a></li>
+                                            <% if (startPage > 2) { %>
+                                                <li class="page-item disabled"><span class="page-link">...</span></li>
+                                            <% } %>
+                                        <% } %>
+
+                                        <% for (let i = startPage; i <= endPage; i++) { %>
+                                            <li class="page-item <%= i === currentPage ? 'active' : '' %>">
+                                                <a class="page-link" href="/admin/products?page=<%= i %>"><%= i %></a>
+                                            </li>
+                                        <% } %>
+
+                                        <% if (endPage < totalPages) {
+                                            if (endPage < totalPages - 1) { %>
+                                                <li class="page-item disabled"><span class="page-link">...</span></li>
+                                            <% } %>
+                                            <li class="page-item"><a class="page-link" href="/admin/products?page=<%= totalPages %>"><%= totalPages %></a></li>
+                                        <% } %>
+
+                                    <% if (currentPage < totalPages) { %>
+                                        <li class="page-item">
+                                            <a class="page-link" href="/admin/products?page=<%= currentPage + 1 %>">Next</a>
+                                        </li>
+                                    <% } %>
+                                </ul>
+                            </nav>
                         </div>
                     <% } %>
                 </div>

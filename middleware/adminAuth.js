@@ -1,12 +1,4 @@
-
-const isAuthenticated = (req, res, next) => {
-  if (req.session.userId) {
-    next();
-  } else {
-    req.flash('error', 'Please log in to continue');
-    res.redirect('/login');
-  }
-};
+const { isAuthenticated } = require('./auth');
 
 
 const isAdminOrProductManager = (req, res, next) => {

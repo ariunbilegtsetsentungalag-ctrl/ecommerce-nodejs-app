@@ -152,30 +152,34 @@
         .quantity-controls {
             display: flex;
             align-items: center;
-            border: 2px solid #ddd;
-            border-radius: 6px;
+            gap: 8px;
         }
 
-        .qty-btn {
-            background: #f8f9fa;
-            border: none;
-            width: 40px;
-            height: 40px;
-            cursor: pointer;
-            font-size: 18px;
-            color: #666;
-        }
-
-        .qty-btn:hover {
-            background: #e9ecef;
-        }
-
-        .qty-input {
-            width: 60px;
-            text-align: center;
-            border: none;
+        .quantity-controls button {
+            width: 36px;
             height: 36px;
-            font-size: 16px;
+            border-radius: 6px;
+            border: 1px solid #dee2e6;
+            background: #fff;
+            color: #495057;
+            transition: all 0.2s ease;
+        }
+
+        .quantity-controls button:hover {
+            background: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .quantity-controls button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .quantity-controls input {
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            font-weight: 600;
         }
 
         .add-to-cart-btn {
@@ -248,6 +252,19 @@
                 <div class="price-display" id="priceDisplay">
                     $<%= product.basePrice ? product.basePrice.toFixed(2) : product.price.toFixed(2) %>
                 </div>
+                
+                <div class="delivery-info mb-3" style="padding: 12px; background-color: var(--bg-secondary); border-radius: 8px; border-left: 4px solid var(--primary-color);">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-truck text-primary me-2"></i>
+                        <strong class="text-primary">Delivery Time:</strong>
+                        <span class="ms-2"><%= product.deliveryTime || 14 %> days</span>
+                    </div>
+                    <small class="text-muted mt-1 d-block">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Estimated delivery time from order confirmation
+                    </small>
+                </div>
+                
                 <p class="product-description"><%= product.description %></p>
 
                 <form action="/cart/add" method="POST" id="productForm">
@@ -260,8 +277,7 @@
                             <% product.sizes.forEach((size, index) => { %>
                             <button type="button" class="size-btn <%= index === 0 ? 'selected' : '' %>" 
                                     data-size="<%= size.name %>" 
-                                    data-price="<%= size.price %>"
-                                    onclick="selectSize('<%= size.name %>', <%= size.price %>)">
+                                    data-price="<%= size.price %>">
                                 <%= size.name %>
                             </button>
                             <% }); %>
@@ -276,11 +292,10 @@
                         <div class="color-options">
                             <% product.colors.forEach((color, index) => { %>
                             <div class="color-option <%= index === 0 ? 'selected' : '' %>" 
-                                 style="background-color: <%= color.code %>" 
+                                 style="background-color: <%- color.code %>" 
                                  title="<%= color.name %>"
                                  data-color="<%= color.name %>"
-                                 data-image="<%= color.image %>"
-                                 onclick="selectColor('<%= color.name %>', '<%= color.image %>')"></div>
+                                 data-image="<%= color.image %>"></div>
                             <% }); %>
                         </div>
                         <input type="hidden" name="selectedColor" id="selectedColor" value="<%= product.colors[0].name %>">
@@ -316,15 +331,29 @@
 
                     <% if (product.stockQuantity > 0) { %>
                     <div class="quantity-section">
-                        <label class="option-label">Quantity:</label>
-                        <div class="quantity-controls">
-                            <button type="button" class="qty-btn" onclick="changeQuantity(-1)">-</button>
-                            <input type="number" name="quantity" id="quantity" value="1" min="1" max="<%= product.stockQuantity %>" class="qty-input" readonly>
-                            <button type="button" class="qty-btn" onclick="changeQuantity(1)">+</button>
+                        <label for="quantity" class="option-label fw-semibold mb-1">Quantity:</label>
+                        <div class="input-group quantity-controls" style="max-width: 180px;">
+                            <button type="button" class="btn btn-outline-secondary" id="qtyMinus" aria-label="Decrease quantity" tabindex="0">&#8722;</button>
+                            <input 
+                                type="number" 
+                                class="form-control text-center fw-bold" 
+                                id="quantity" 
+                                name="quantity" 
+                                value="1" 
+                                min="1" 
+                                max="<%= product.stockQuantity %>" 
+                                inputmode="numeric" 
+                                aria-live="off"
+                                aria-describedby="stockHelp qtyStatus"
+                            >
+                            <button type="button" class="btn btn-outline-secondary" id="qtyPlus" aria-label="Increase quantity" tabindex="0">+</button>
                         </div>
+                        <small id="stockHelp" class="text-muted d-block mt-1">Max: <%= product.stockQuantity %></small>
+                        <div id="qtyStatus" class="visually-hidden" aria-live="polite"></div>
                     </div>
 
                     <button type="submit" class="add-to-cart-btn">Add to Cart</button>
+                    
                     <% } else { %>
                     <button type="button" class="add-to-cart-btn" disabled style="background: #ccc; cursor: not-allowed;">Out of Stock</button>
                     <% } %>
@@ -334,7 +363,7 @@
     </main>
 
     <script>
-        let currentPrice = <%= product.basePrice ? product.basePrice : product.price %>;
+        let currentPrice = <%- JSON.stringify(product.basePrice || product.price) %>;
 
         function changeMainImage(src, thumbnail) {
             document.getElementById('mainImage').src = src;
@@ -348,10 +377,8 @@
             document.querySelectorAll('.size-btn').forEach(btn => btn.classList.remove('selected'));
             event.target.classList.add('selected');
             
-
             document.getElementById('selectedSize').value = sizeName;
             
- 
             currentPrice = price;
             document.getElementById('priceDisplay').textContent = '$' + price.toFixed(2);
         }
@@ -367,16 +394,140 @@
             }
         }
 
-        function changeQuantity(delta) {
-            const quantityInput = document.getElementById('quantity');
-            const maxStock = parseInt(quantityInput.getAttribute('max'));
-            let newQuantity = parseInt(quantityInput.value) + delta;
+        // New quantity control logic for visible input-group
+        (function(){
+            const qtyInput = document.getElementById('quantity');
+            const btnMinus = document.getElementById('qtyMinus');
+            const btnPlus = document.getElementById('qtyPlus');
+            const statusRegion = document.getElementById('qtyStatus');
+            if(!qtyInput || !btnMinus || !btnPlus) return;
+
+            const min = parseInt(qtyInput.min) || 1;
+            const max = parseInt(qtyInput.max) || 1;
+            let holdTimer = null;
+            let holdInterval = null;
+
+            function clamp(val){
+                if(isNaN(val)) return min;
+                return Math.min(max, Math.max(min, val));
+            }
+
+            function updateButtons(){
+                const value = parseInt(qtyInput.value) || min;
+                btnMinus.disabled = value <= min;
+                btnPlus.disabled  = value >= max;
+                btnMinus.classList.toggle('disabled', btnMinus.disabled);
+                btnPlus.classList.toggle('disabled', btnPlus.disabled);
+            }
+
+            function change(delta){
+                const current = parseInt(qtyInput.value) || min;
+                const next = clamp(current + delta);
+                if(next !== current){
+                    qtyInput.value = next;
+                    qtyInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    if(statusRegion){
+                        statusRegion.textContent = `Quantity ${next} of maximum ${max}`;
+                    }
+                }
+                updateButtons();
+            }
+
+            function startHold(delta){
+                change(delta);
+                holdTimer = setTimeout(()=>{
+                    holdInterval = setInterval(()=>change(delta), 70); // acceleration feel
+                }, 400); // long-press delay
+            }
+
+            function clearHold(){
+                clearTimeout(holdTimer); holdTimer=null;
+                clearInterval(holdInterval); holdInterval=null;
+            }
+
+            // Click / hold events
+            ['mousedown','touchstart'].forEach(ev=>{
+                btnMinus.addEventListener(ev, ()=> startHold(-1));
+                btnPlus.addEventListener(ev, ()=> startHold(1));
+            });
+            ['mouseup','mouseleave','touchend','touchcancel'].forEach(ev=>{
+                btnMinus.addEventListener(ev, clearHold);
+                btnPlus.addEventListener(ev, clearHold);
+            });
+
+            // Keyboard support when focused on buttons
+            [btnMinus, btnPlus].forEach(btn=>{
+                btn.addEventListener('keydown', e=>{
+                    if(e.key === 'Enter' || e.key === ' '){
+                        e.preventDefault();
+                        change(btn === btnMinus ? -1 : 1);
+                    }
+                });
+            });
+
+            // Direct typing sanitization
+            qtyInput.addEventListener('input', ()=>{
+                const cleaned = qtyInput.value.replace(/[^0-9]/g,'');
+                qtyInput.value = cleaned === '' ? '' : cleaned;
+            });
+            qtyInput.addEventListener('blur', ()=>{
+                qtyInput.value = clamp(parseInt(qtyInput.value));
+                updateButtons();
+                if(statusRegion){
+                    statusRegion.textContent = `Quantity ${qtyInput.value} of maximum ${max}`;
+                }
+            });
+            qtyInput.addEventListener('change', updateButtons);
+
+            // Prevent scroll wheel from accidentally changing when not intended
+            qtyInput.addEventListener('wheel', e=>{ e.preventDefault(); }, { passive:false });
+
+            updateButtons();
+        })();
+        
+        // Initialize button states when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, initializing quantity controls...');
             
-            if (newQuantity < 1) newQuantity = 1;
-            if (newQuantity > maxStock) newQuantity = maxStock;
+            // Quantity control now initialized immediately in IIFE above.
             
-            quantityInput.value = newQuantity;
-        }
+            // Add event listeners for size buttons
+            document.querySelectorAll('.size-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const sizeName = this.getAttribute('data-size');
+                    const price = parseFloat(this.getAttribute('data-price'));
+                    selectSize(sizeName, price);
+                });
+            });
+            
+            // Add event listeners for color options
+            document.querySelectorAll('.color-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    const colorName = this.getAttribute('data-color');
+                    const imageSrc = this.getAttribute('data-image');
+                    selectColor(colorName, imageSrc);
+                });
+            });
+            
+            // Ensure form validation on submit
+            const form = document.querySelector('form[action="/cart/add"]');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    const quantityInput = document.getElementById('quantity');
+                    const quantity = parseInt(quantityInput.value) || 1;
+                    
+                    if (quantity < 1) {
+                        e.preventDefault();
+                        alert('Please select a valid quantity');
+                        return false;
+                    }
+                    
+                    console.log('Submitting form with quantity:', quantity);
+                });
+            }
+            
+            console.log('Quantity controls initialized successfully');
+        });
     </script>
 
     <%- include('include/footer') %>
