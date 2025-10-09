@@ -49,7 +49,7 @@ exports.postLogin = async (req, res) => {
         res.redirect('/login');
       });
     }
-
+console.log("hi");
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       req.flash('error', 'Invalid username or password');
