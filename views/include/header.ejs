@@ -24,11 +24,11 @@
     }
     
     .navbar-nav {
-      gap: 6px;
+      gap: 12px;
     }
     
     .navbar-nav .nav-item {
-      margin: 0 2px;
+      margin: 0 4px;
     }
     
     .navbar-brand {
@@ -39,6 +39,14 @@
       font-size: 1.75rem;
       font-weight: 800;
       letter-spacing: -0.5px;
+      margin-right: auto !important;
+      margin-left: 0 !important;
+      padding-left: 0 !important;
+      order: -1;
+      position: absolute;
+      left: 15px;
+      top: 50%;
+      transform: translateY(-50%);
     }
     
     .nav-link.active {
@@ -69,12 +77,14 @@
     }
     
     .user-welcome {
-      background: rgba(255, 255, 255, 0.1);
-      padding: 10px 18px;
-      border-radius: 25px;
+      background: none !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
       font-weight: 500;
       font-size: 1rem;
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      border: none !important;
+      margin-left: 15px !important;
+      color: rgba(255, 255, 255, 0.9) !important;
     }
     
     .btn-outline-light {
@@ -168,8 +178,8 @@
 </div>
 
 <!-- Navigation -->
-<nav class="navbar navbar-expand-lg navbar-dark">
-  <div class="container">
+<nav class="navbar navbar-expand-lg navbar-dark" style="position: relative;">
+  <div class="container d-flex">
     <a class="navbar-brand" href="/">
       <i class="fas fa-store me-2"></i>Simple Shop
     </a>
@@ -179,7 +189,7 @@
     
     <div class="collapse navbar-collapse" id="navbarContent">
       <% if (locals.userId) { %>
-        <ul class="navbar-nav me-auto">
+        <ul class="navbar-nav mx-auto">
           <li class="nav-item">
             <a class="nav-link" href="/shop">
               <i class="fas fa-shopping-bag me-1"></i><%- __('shop') %>
@@ -214,7 +224,7 @@
           <% } %>
         </ul>
         
-        <div class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center gap-3 ms-auto">
           <!-- Language Switcher -->
           <div class="d-flex gap-1">
             <a href="/lang/en" class="btn btn-sm <%= (typeof currentLocale !== 'undefined' && currentLocale === 'en') || typeof currentLocale === 'undefined' ? 'btn-primary' : 'btn-outline-light' %>" title="English">EN</a>
@@ -223,9 +233,6 @@
           <button id="theme-toggle" class="btn btn-outline-light" type="button" title="Toggle theme" style="padding: 10px 12px !important; border-radius: 10px;">
             <i class="fas fa-moon" id="theme-icon"></i>
           </button>
-          <span class="navbar-text user-welcome">
-            <i class="fas fa-user-circle me-2"></i><%- __('hi') %>, <%= locals.username %>
-          </span>
           <a href="/logout" class="btn btn-outline-light">
             <i class="fas fa-sign-out-alt me-1"></i><%- __('logout') %>
           </a>

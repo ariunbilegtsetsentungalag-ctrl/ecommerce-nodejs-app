@@ -123,11 +123,10 @@ exports.updateProfile = async (req, res) => {
       phone,
       dateOfBirth,
       gender,
-      street,
-      city,
-      state,
-      zipCode,
-      country
+      cityAimag,
+      duuregSum,
+      horooBag,
+      detailedInfo
     } = req.body;
 
     // Validate required fields for profile completion
@@ -135,11 +134,9 @@ exports.updateProfile = async (req, res) => {
       'First Name': firstName,
       'Last Name': lastName,
       'Phone': phone,
-      'Street Address': street,
-      'City': city,
-      'State': state,
-      'Zip Code': zipCode,
-      'Country': country
+      'City/Aimag': cityAimag,
+      'Duureg/Sum': duuregSum,
+      'Horoo/Bag': horooBag
     };
 
     const missingFields = Object.entries(requiredFields)
@@ -167,11 +164,10 @@ exports.updateProfile = async (req, res) => {
     user.dateOfBirth = dateOfBirth || null;
     user.gender = gender || '';
     user.address = {
-      street: street.trim(),
-      city: city.trim(),
-      state: state.trim(),
-      zipCode: zipCode.trim(),
-      country: country.trim()
+      cityAimag: cityAimag ? cityAimag.trim() : '',
+      duuregSum: duuregSum ? duuregSum.trim() : '',
+      horooBag: horooBag ? horooBag.trim() : '',
+      detailedInfo: detailedInfo ? detailedInfo.trim() : ''
     };
 
     // Save will trigger the pre-save hook to update profileCompleted

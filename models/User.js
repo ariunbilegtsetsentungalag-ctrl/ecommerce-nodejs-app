@@ -42,23 +42,19 @@ const userSchema = new mongoose.Schema({
     trim: true
   },
   address: {
-    street: {
+    cityAimag: {
       type: String,
       trim: true
     },
-    city: {
+    duuregSum: {
       type: String,
       trim: true
     },
-    state: {
+    horooBag: {
       type: String,
       trim: true
     },
-    zipCode: {
-      type: String,
-      trim: true
-    },
-    country: {
+    detailedInfo: {
       type: String,
       trim: true
     }

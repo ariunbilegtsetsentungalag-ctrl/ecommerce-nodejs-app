@@ -821,3 +821,35 @@ body {
     font-size: 12px !important;
   }
 }
+
+/* ===============================================
+   DARK MODE PRODUCT DESCRIPTIONS
+   =============================================== */
+
+/* Single Product Page Description */
+[data-theme="dark"] .product-description {
+  color: var(--text-color) !important;
+}
+
+/* Shop Page Product Card Descriptions */
+[data-theme="dark"] .card-text.text-muted {
+  color: var(--text-secondary) !important;
+}
+
+/* Additional product text elements */
+[data-theme="dark"] .text-muted {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="dark"] .text-dark {
+  color: var(--text-color) !important;
+}
+
+/* Product names in dark mode */
+[data-theme="dark"] .card-title {
+  color: var(--text-color) !important;
+}
+
+[data-theme="dark"] .product-name {
+  color: var(--text-color) !important;
+}

@@ -5,12 +5,16 @@
     <div class="col-lg-8">
       <!-- Profile Header -->
       <div class="card shadow-lg border-0 mb-4">
-        <div class="card-body text-center p-5">
-          <div class="bg-gradient-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-            <i class="fas fa-user fa-2x"></i>
+        <div class="card-body p-5">
+          <div class="d-flex align-items-center">
+            <div class="bg-gradient-primary text-white rounded-circle d-flex align-items-center justify-content-center me-4" style="width: 80px; height: 80px;">
+              <i class="fas fa-user fa-2x"></i>
+            </div>
+            <div>
+              <h2 class="text-gradient mb-2"><%- __('my_profile') %></h2>
+              <p class="text-muted mb-0"><%- __('manage_profile_info') %></p>
+            </div>
           </div>
-          <h2 class="text-gradient mb-2"><%- __('my_profile') %></h2>
-          <p class="text-muted"><%- __('manage_profile_info') %></p>
         </div>
       </div>
 
@@ -91,35 +95,28 @@
                   <i class="fas fa-map-marker-alt me-2"></i><%- __('address_information') %>
                 </h6>
               </div>
-              <div class="col-12 mb-3">
-                <label for="street" class="form-label"><%- __('street_address') %> <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="street" name="street"
-                       value="<%= user.address && user.address.street ? user.address.street : '' %>"
-                       placeholder="<%- __('enter_street_address') %>" required>
+              <div class="col-md-6 mb-3">
+                <label for="cityAimag" class="form-label"><%- __('city_aimag') %> <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="cityAimag" name="cityAimag"
+                       value="<%= user.address && user.address.cityAimag ? user.address.cityAimag : '' %>"
+                       placeholder="<%- __('enter_city_aimag') %>" required>
               </div>
               <div class="col-md-6 mb-3">
-                <label for="city" class="form-label"><%- __('city') %> <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="city" name="city"
-                       value="<%= user.address && user.address.city ? user.address.city : '' %>"
-                       placeholder="<%- __('enter_city') %>" required>
+                <label for="duuregSum" class="form-label"><%- __('duureg_sum') %> <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="duuregSum" name="duuregSum"
+                       value="<%= user.address && user.address.duuregSum ? user.address.duuregSum : '' %>"
+                       placeholder="<%- __('enter_duureg_sum') %>" required>
               </div>
               <div class="col-md-6 mb-3">
-                <label for="state" class="form-label"><%- __('state_province') %> <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="state" name="state"
-                       value="<%= user.address && user.address.state ? user.address.state : '' %>"
-                       placeholder="<%- __('enter_state') %>" required>
+                <label for="horooBag" class="form-label"><%- __('horoo_bag') %> <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="horooBag" name="horooBag"
+                       value="<%= user.address && user.address.horooBag ? user.address.horooBag : '' %>"
+                       placeholder="<%- __('enter_horoo_bag') %>" required>
               </div>
               <div class="col-md-6 mb-3">
-                <label for="zipCode" class="form-label"><%- __('zip_code') %> <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="zipCode" name="zipCode"
-                       value="<%= user.address && user.address.zipCode ? user.address.zipCode : '' %>"
-                       placeholder="<%- __('enter_zip_code') %>" required>
-              </div>
-              <div class="col-md-6 mb-3">
-                <label for="country" class="form-label"><%- __('country') %> <span class="text-danger">*</span></label>
-                <input type="text" class="form-control" id="country" name="country"
-                       value="<%= user.address && user.address.country ? user.address.country : '' %>"
-                       placeholder="<%- __('enter_country') %>" required>
+                <label for="detailedInfo" class="form-label"><%- __('detailed_info') %></label>
+                <textarea class="form-control" id="detailedInfo" name="detailedInfo" rows="3"
+                          placeholder="<%- __('enter_detailed_info') %>"><%= user.address && user.address.detailedInfo ? user.address.detailedInfo : '' %></textarea>
               </div>
             </div>
 

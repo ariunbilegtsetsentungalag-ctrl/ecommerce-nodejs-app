@@ -2,12 +2,11 @@ const Category = require('../models/Category');
 const Product = require('../models/Product');
 
 const adminCategoryController = {
-  // Display categories management page
+
   async viewCategories(req, res) {
     try {
       const categories = await Category.find().populate('createdBy', 'username').sort({ createdAt: -1 });
       
-      // Count products per category
       const categoryCounts = {};
       for (const category of categories) {
         const count = await Product.countDocuments({ category: category.name });
