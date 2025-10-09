@@ -49,6 +49,27 @@
       transform: translateY(-50%);
     }
     
+    .navbar-toggler {
+      margin-left: auto !important;
+      position: relative;
+      z-index: 999;
+    }
+    
+    /* Mobile responsive adjustments */
+    @media (max-width: 991.98px) {
+      .navbar-brand {
+        position: relative !important;
+        left: auto !important;
+        top: auto !important;
+        transform: none !important;
+        margin-right: auto !important;
+      }
+      
+      .container {
+        padding-left: 15px !important;
+      }
+    }
+    
     .nav-link.active {
       background: rgba(255, 255, 255, 0.2) !important;
       border-radius: 12px;
@@ -179,11 +200,11 @@
 
 <!-- Navigation -->
 <nav class="navbar navbar-expand-lg navbar-dark" style="position: relative;">
-  <div class="container d-flex">
+  <div class="container d-flex justify-content-between align-items-center">
     <a class="navbar-brand" href="/">
       <i class="fas fa-store me-2"></i>Simple Shop
     </a>
-    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+    <button class="navbar-toggler border-0 ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
       <span class="navbar-toggler-icon"></span>
     </button>
     
@@ -342,6 +363,42 @@ document.addEventListener('DOMContentLoaded', function() {
     if (mainContent) {
       mainContent.classList.remove('loaded');
     }
+  }
+
+  // Mobile menu toggle functionality
+  const navbarToggler = document.querySelector('.navbar-toggler');
+  const navbarCollapse = document.querySelector('#navbarContent');
+  
+  if (navbarToggler && navbarCollapse) {
+    navbarToggler.addEventListener('click', function() {
+      // Toggle the collapse state
+      const isExpanded = navbarToggler.getAttribute('aria-expanded') === 'true';
+      
+      if (isExpanded) {
+        // Close the menu
+        navbarCollapse.classList.remove('show');
+        navbarToggler.setAttribute('aria-expanded', 'false');
+        navbarToggler.classList.add('collapsed');
+      } else {
+        // Open the menu
+        navbarCollapse.classList.add('show');
+        navbarToggler.setAttribute('aria-expanded', 'true');
+        navbarToggler.classList.remove('collapsed');
+      }
+    });
+
+    // Close menu when clicking on a nav link (mobile)
+    const navLinks = document.querySelectorAll('#navbarContent .nav-link');
+    navLinks.forEach(link => {
+      link.addEventListener('click', function() {
+        // Close mobile menu after clicking a link
+        if (window.innerWidth < 992) { // Only on mobile/tablet
+          navbarCollapse.classList.remove('show');
+          navbarToggler.setAttribute('aria-expanded', 'false');
+          navbarToggler.classList.add('collapsed');
+        }
+      });
+    });
   }
 });
 </script>

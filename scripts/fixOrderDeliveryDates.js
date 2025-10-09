@@ -30,14 +30,13 @@ async function fixOrderDeliveryDates() {
     console.log(`Found ${ordersToUpdate.length} orders to update with delivery info`);
 
     for (let order of ordersToUpdate) {
-      // Calculate delivery date if missing
+      
       let estimatedDeliveryDate = order.estimatedDeliveryDate;
       if (!estimatedDeliveryDate) {
         estimatedDeliveryDate = new Date(order.orderDate);
         estimatedDeliveryDate.setDate(estimatedDeliveryDate.getDate() + 14);
       }
 
-      // Set delivery status if missing
       let deliveryStatus = order.deliveryStatus;
       if (!deliveryStatus) {
         const daysSinceOrder = Math.floor((Date.now() - order.orderDate) / (1000 * 60 * 60 * 24));
